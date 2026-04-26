@@ -1,0 +1,237 @@
+{
+  "@@locale": "km",
+  
+  "appTitle": "CashChew",
+  
+  "settings": "ការកំណត់",
+  "settingsAndCustomization": "ការកំណត់ និងការប្ដូរតាមបំណង",
+  
+  "theme": "រចនាប័ទ្ម",
+  "accentColor": "ពណ៌សំខាន់",
+  "accentColorDescription": "ជ្រើសរើសពណ៌សម្រាប់ចំណុចប្រទាក់",
+  "selectAccentColor": "ជ្រើសរើសពណ៌សំខាន់",
+  
+  "preferences": "ចំណូលចិត្ត",
+  "language": "ភាសា",
+  "languageDescription": "ជ្រើសរើសភាសាដែលអ្នកចូលចិត្ត",
+  "selectLanguage": "ជ្រើសរើសភាសា",
+  "systemLanguage": "ប្រព័ន្ធ",
+  
+  "home": "ទំព័រដើម",
+  "transactions": "ប្រតិបត្តិការ",
+  "budgets": "ថវិកា",
+  "more": "ច្រើនទៀត",
+  
+  "save": "រក្សាទុក",
+  "cancel": "បោះបង់",
+  "delete": "លុប",
+  "edit": "កែសម្រួល",
+  "add": "បន្ថែម",
+  "done": "រួចរាល់",
+  "confirm": "បញ្ជាក់",
+  "retry": "ព្យាយាមម្ដងទៀត",
+  "reset": "កំណត់ឡើងវិញ",
+  "action": "សកម្មភាព",
+  "restore": "ស្ដារឡើងវិញ",
+  "archive": "ទុកក្នុងប័ណ្ណសារ",
+  "renew": "បន្តថ្មី",
+  
+  "income": "ចំណូល",
+  "expense": "ចំណាយ",
+  "balance": "សមតុល្យ",
+  "total": "សរុប",
+  "all": "ទាំងអស់",
+  
+  "noTransactions": "មិនទាន់មានប្រតិបត្តិការ",
+  "noBudgets": "មិនទាន់មានថវិកា",
+  "noAccounts": "មិនទាន់មានគណនី",
+  
+  "account": "គណនី",
+  "accounts": "គណនី​នានា",
+  "category": "ប្រភេទ",
+  "categories": "ប្រភេទ​នានា",
+  "budget": "ថវិកា",
+  "amount": "ចំនួនប្រាក់",
+  "date": "កាលបរិច្ឆេទ",
+  "notes": "កំណត់ចំណាំ",
+  "title": "ចំណងជើង",
+  
+  "whatsUp": "សួស្តី",
+  "totalBalance": "សមតុល្យសរុប",
+  "friend": "មិត្តភ័ក្ត្រ",
+  
+  "addAccount": "បន្ថែមគណនី",
+  "transactionsCount": "{count} ប្រតិបត្តិការ",
+  "@transactionsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  
+  "setUpBudget": "បង្កើតថវិកា",
+  "trackSpendingHabits": "តាមដានទម្លាប់ការចំណាយរបស់អ្នក",
+  "allAccounts": "គណនីទាំងអស់",
+  "specificAccount": "គណនីជាក់លាក់",
+  "categoryCount": "{count} ប្រភេទ",
+  "@categoryCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "leftOf": "នៅសល់ពី {amount}",
+  "@leftOf": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "today": "ថ្ងៃនេះ",
+  "yesterday": "ម្សិលមិញ",
+  
+  "budgetExpired": "\"{name}\" បានផុតកំណត់",
+  "@budgetExpired": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "budgetsExpired": "{count} ថវិកាបានផុតកំណត់",
+  "@budgetsExpired": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "renewOrArchive": "បន្តថ្មី ឬទុកក្នុងប័ណ្ណសារ",
+  "expired": "ផុតកំណត់",
+  "spent": "បានចំណាយ",
+  "overBy": "លើសដោយ",
+  "saved": "បានសន្សំ",
+  "budgetArchived": "ថវិកាបានទុកក្នុងប័ណ្ណសារ",
+  "budgetRenewed": "ថវិកាបានបន្តថ្មីសម្រាប់រយៈពេលថ្មី",
+  "newPeriod": "រយៈពេលថ្មី",
+  "overBudgetBy": "លើសថវិកាដោយ {amount}",
+  "@overBudgetBy": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "budgetPeriodEnded": "រយៈពេលថវិកាបានបញ្ចប់",
+  "dailySpendingAllowance": "អ្នកអាចចំណាយ {amount}/ថ្ងៃ សម្រាប់ {days} ថ្ងៃទៀត",
+  "@dailySpendingAllowance": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "days": {"type": "int"}
+    }
+  },
+  "moreBudgets": "+{count} ថវិកាទៀត",
+  "@moreBudgets": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  
+  "seeAllTransactions": "មើលប្រតិបត្តិការទាំងអស់",
+  
+  "spendingOverview": "ទិដ្ឋភាពទូទៅនៃការចំណាយ",
+  "noSpendingData": "មិនទាន់មានទិន្នន័យការចំណាយ",
+  "addExpenseToSeeTrends": "បន្ថែមប្រតិបត្តិការចំណាយដើម្បីមើលនិន្នាការ",
+  
+  "searchTransactions": "ស្វែងរកប្រតិបត្តិការ...",
+  "filterTransactions": "តម្រងប្រតិបត្តិការ",
+  "transactionType": "ប្រភេទប្រតិបត្តិការ",
+  "noCategoriesAvailable": "មិនមានប្រភេទ",
+  "applyFilters": "អនុវត្តតម្រង",
+  "errorLoadingTransactions": "កំហុសក្នុងការផ្ទុកប្រតិបត្តិការ",
+  "noTransactionsFound": "រកមិនឃើញប្រតិបត្តិការ",
+  "noTransactionsFor": "គ្មានប្រតិបត្តិការសម្រាប់ {month}",
+  "@noTransactionsFor": {
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "addTransaction": "បន្ថែមប្រតិបត្តិការ",
+  
+  "active": "សកម្ម",
+  "archived": "ប័ណ្ណសារ",
+  "createBudgetPrompt": "បង្កើតថវិកាដើម្បីចាប់ផ្តើមតាមដាន\nទម្លាប់ការចំណាយរបស់អ្នក",
+  "createBudget": "បង្កើតថវិកា",
+  "noArchivedBudgets": "គ្មានថវិកាក្នុងប័ណ្ណសារ",
+  "archivedBudgetsHint": "ថវិកាដែលបានបញ្ចប់ ឬផុតកំណត់\nនឹងបង្ហាញនៅទីនេះបន្ទាប់ពីទុកក្នុងប័ណ្ណសារ",
+  "expiredBudgets": "ថវិកាផុតកំណត់",
+  "renewOrArchiveBudgets": "បន្តថ្មី ឬទុកក្នុងប័ណ្ណសារថវិកាទាំងនេះ",
+  "upcomingBudgets": "ថវិកានាពេលខាងមុខ",
+  "archiveBudget": "ទុកថវិកាក្នុងប័ណ្ណសារ",
+  "archiveConfirmMessage": "ទុក \"{name}\" ក្នុងប័ណ្ណសារ? អ្នកអាចស្ដារវាឡើងវិញពីផ្ទាំងប័ណ្ណសារ។",
+  "@archiveConfirmMessage": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "budgetArchivedMessage": "{name} បានទុកក្នុងប័ណ្ណសារ",
+  "@budgetArchivedMessage": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "budgetRestored": "{name} បានស្ដារឡើងវិញ",
+  "@budgetRestored": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "editBudget": "កែសម្រួលថវិកា",
+  "deleteBudget": "លុបថវិកា",
+  "deleteConfirmMessage": "តើអ្នកប្រាកដថាចង់លុប \"{name}\"? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+  "@deleteConfirmMessage": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "renewBudget": "បន្តថវិកាថ្មី",
+  "renewBudgetPrompt": "បង្កើតថវិកា \"{name}\" ថ្មីសម្រាប់រយៈពេលបន្ទាប់?",
+  "@renewBudgetPrompt": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "limit": "កំណត់",
+  "budgetRenewedSuccess": "ថវិកាបានបន្តថ្មីដោយជោគជ័យ",
+
+  "budgetWizardTitle": "រៀបចំថវិកា 50/30/20",
+  "quickSetup503020": "រៀបចំរហ័ស (50/30/20)",
+  "wizardStep1Title": "រៀបចំ",
+  "wizardStep1Subtitle": "បញ្ចូលថវិកាសរុបរបស់អ្នក",
+  "wizardStep2Title": "មើលការបែងចែក",
+  "wizardStep2Subtitle": "ពិនិត្យការបែងចែក 50/30/20",
+  "wizardStep3Title": "ប្រភេទ",
+  "wizardStep3Subtitle": "កំណត់ប្រភេទសម្រាប់ថវិកានីមួយៗ",
+  "wizardStep4Title": "បញ្ជាក់",
+  "wizardStep4Subtitle": "ពិនិត្យ និងបង្កើតថវិកា",
+
+  "totalMonthlyBudget": "ថវិកាសរុបប្រចាំខែ",
+  "trackAccount": "តាមដានគណនី",
+  "budgetPeriod": "រយៈពេលថវិកា",
+  "thisMonth": "ខែនេះ",
+  "nextMonth": "ខែក្រោយ",
+  "continueText": "បន្ត",
+  "back": "ថយក្រោយ",
+  "createBudgets": "បង្កើតថវិកា",
+
+  "budgetRuleExplanation": "ច្បាប់ 50/30/20 ផ្ដល់យោបល់បែងចែក 50% សម្រាប់តម្រូវការ 30% សម្រាប់ចង់បាន និង 20% សម្រាប់សន្សំ។",
+  "needs": "តម្រូវការ",
+  "wants": "ចង់បាន",
+  "savings": "សន្សំ",
+  "needsDescription": "ការចំណាយចាំបាច់ដូចជា ផ្ទះ វិក្កយបត្រ អាហារ",
+  "wantsDescription": "ការចំណាយមិនចាំបាច់ដូចជា កំសាន្ត",
+  "savingsDescription": "ប្រាក់សម្រាប់គោលដៅនាពេលអនាគត",
+
+  "assignCategoriesHint": "អូសប្រភេទរវាងផ្នែក ឬចុចដើម្បីផ្លាស់ទី",
+  "moveTo": "ផ្លាស់ទៅ",
+  "removeFromBudget": "ដកចេញពីថវិកា",
+  "reviewBudgetsSummary": "ពិនិត្យថវិកាដែលនឹងត្រូវបង្កើត:",
+
+  "needsBudget": "ថវិកាតម្រូវការ",
+  "wantsBudget": "ថវិកាចង់បាន",
+  "savingsBudget": "ថវិកាសន្សំ",
+
+  "pleaseEnterAmount": "សូមបញ្ចូលចំនួនប្រាក់",
+  "pleaseEnterValidAmount": "សូមបញ្ចូលចំនួនប្រាក់ត្រឹមត្រូវ"
+}
