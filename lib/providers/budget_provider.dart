@@ -6,6 +6,39 @@ import '../services/database_service.dart';
 import '../utils/budget_role_type.dart';
 import '../utils/budget_rule_categories.dart';
 
+/// How to handle unspent funds when a role budget period ends.
+enum RoleRolloverDestination {
+  /// Keep as the same role next period (limit = leftover).
+  carryForward,
+
+  /// Add leftover to the Goals bucket for the next period (Needs/Wants only).
+  moveToGoals,
+}
+
+/// Expired role budgets with unspent balance, newest periods first.
+List<BudgetWithSpent> expiredRoleBudgetsWithRemaining(
+  List<BudgetWithSpent> expired,
+) {
+  int roleSort(BudgetRoleType? r) => switch (r) {
+        BudgetRoleType.needs => 0,
+        BudgetRoleType.wants => 1,
+        BudgetRoleType.goals => 2,
+        _ => 3,
+      };
+  final list = expired
+      .where(
+        (b) => b.budget.roleType != null && b.remaining > 0.009,
+      )
+      .toList()
+    ..sort((a, b) {
+      final byRole =
+          roleSort(a.budget.roleType).compareTo(roleSort(b.budget.roleType));
+      if (byRole != 0) return byRole;
+      return b.budget.endDate.compareTo(a.budget.endDate);
+    });
+  return list;
+}
+
 /// Data class to hold budget with its spending info
 class BudgetWithSpent {
   final Budget budget;
@@ -586,6 +619,189 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
       return false;
     }
   }
+
+  (DateTime, DateTime) _calendarMonthAfterBudgetEnd(Budget budget) {
+    final end = DateTime.fromMillisecondsSinceEpoch(budget.endDate);
+    final nextStart = DateTime(end.year, end.month + 1, 1);
+    final nextEnd = DateTime(
+      nextStart.year,
+      nextStart.month + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+    return (nextStart, nextEnd);
+  }
+
+  Future<Budget?> _findOverlappingRoleBudget({
+    required BudgetRoleType role,
+    required int periodStartMs,
+    required int periodEndMs,
+    required String? accountId,
+  }) async {
+    final budgets = await _db.getNonArchivedBudgets();
+    for (final b in budgets) {
+      if (b.roleType != role) continue;
+      if (b.accountId != accountId) continue;
+      final overlaps = b.startDate <= periodEndMs && b.endDate >= periodStartMs;
+      if (overlaps) return b;
+    }
+    return null;
+  }
+
+  Future<void> _carryForwardRoleBudgetSlice(
+    BudgetWithSpent old,
+    Uuid uuid,
+    int nowMs,
+  ) async {
+    final role = old.budget.roleType!;
+    final (nextStart, nextEnd) = _calendarMonthAfterBudgetEnd(old.budget);
+    final startMs = nextStart.millisecondsSinceEpoch;
+    final endMs = nextEnd.millisecondsSinceEpoch;
+
+    await _db.archiveBudget(old.budget.id);
+
+    final existing = await _findOverlappingRoleBudget(
+      role: role,
+      periodStartMs: startMs,
+      periodEndMs: endMs,
+      accountId: old.budget.accountId,
+    );
+
+    if (existing != null) {
+      await _db.updateBudget(
+        existing.copyWith(
+          limitAmount: existing.limitAmount + old.remaining,
+          updatedAt: nowMs,
+        ),
+      );
+      return;
+    }
+
+    final periodLabel = DateFormat(
+      'MMM yyyy',
+    ).format(nextStart);
+    final newBudget = Budget(
+      id: uuid.v4(),
+      name: '${role.displayName} · $periodLabel',
+      accountId: old.budget.accountId,
+      limitAmount: old.remaining,
+      startDate: startMs,
+      endDate: endMs,
+      roleType: role,
+      createdAt: nowMs,
+      updatedAt: nowMs,
+    );
+    await _db.insertBudget(newBudget);
+    await _db.setBudgetCategories(newBudget.id, old.categoryIds);
+  }
+
+  Future<void> _moveRoleLeftoverToGoalsSlice(
+    BudgetWithSpent old,
+    Uuid uuid,
+    int nowMs,
+  ) async {
+    final (nextStart, nextEnd) = _calendarMonthAfterBudgetEnd(old.budget);
+    final startMs = nextStart.millisecondsSinceEpoch;
+    final endMs = nextEnd.millisecondsSinceEpoch;
+
+    await _db.archiveBudget(old.budget.id);
+
+    final existingGoals = await _findOverlappingRoleBudget(
+      role: BudgetRoleType.goals,
+      periodStartMs: startMs,
+      periodEndMs: endMs,
+      accountId: old.budget.accountId,
+    );
+
+    if (existingGoals != null) {
+      await _db.updateBudget(
+        existingGoals.copyWith(
+          limitAmount: existingGoals.limitAmount + old.remaining,
+          updatedAt: nowMs,
+        ),
+      );
+      return;
+    }
+
+    final expenseCategories = await _db.getCategories(type: 'expense');
+    final categorized =
+        BudgetRuleCategorizer.categorizeExpenses(expenseCategories);
+    final savingsIds =
+        categorized[BudgetRuleType.savings]!.map((c) => c.id).toList();
+    if (savingsIds.isEmpty) {
+      throw Exception(
+        'No savings categories for Goals. Add categories first.',
+      );
+    }
+
+    final periodLabel = DateFormat('MMM yyyy').format(nextStart);
+    final newBudget = Budget(
+      id: uuid.v4(),
+      name: '${BudgetRoleType.goals.displayName} · $periodLabel',
+      accountId: old.budget.accountId,
+      limitAmount: old.remaining,
+      startDate: startMs,
+      endDate: endMs,
+      roleType: BudgetRoleType.goals,
+      createdAt: nowMs,
+      updatedAt: nowMs,
+    );
+    await _db.insertBudget(newBudget);
+    await _db.setBudgetCategories(newBudget.id, savingsIds);
+  }
+
+  /// Apply end-of-period choices for expired role budgets with leftover funds.
+  Future<bool> applyRoleRollovers(
+    Map<String, RoleRolloverDestination> choicesByBudgetId,
+  ) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final uuid = const Uuid();
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      for (final entry in choicesByBudgetId.entries) {
+        final budgetId = entry.key;
+        final dest = entry.value;
+        final bw = getBudgetById(budgetId);
+        if (bw == null) continue;
+        final role = bw.budget.roleType;
+        if (role == null) continue;
+        if (bw.remaining <= 0.009) continue;
+        if (bw.budget.endDate >= now) continue;
+
+        final effective = (role == BudgetRoleType.goals ||
+                role == BudgetRoleType.futureMe ||
+                role == BudgetRoleType.custom)
+            ? RoleRolloverDestination.carryForward
+            : dest;
+
+        if (effective == RoleRolloverDestination.moveToGoals) {
+          await _moveRoleLeftoverToGoalsSlice(bw, uuid, nowMs);
+        } else {
+          await _carryForwardRoleBudgetSlice(bw, uuid, nowMs);
+        }
+      }
+
+      await loadBudgets();
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
+  /// Whether any expired role budget still has unspent balance (reload budgets first).
+  bool checkRolloverNeeded() {
+    return expiredRoleBudgetsWithRemaining(state.expiredBudgets).isNotEmpty;
+  }
 }
 
 /// Provider for BudgetNotifier
@@ -644,4 +860,11 @@ final roleBudgetsProvider = Provider<List<BudgetWithSpent>>((ref) {
 /// Safe-to-spend-today from the active Wants role budget, if any.
 final safeToSpendTodayProvider = Provider<double?>((ref) {
   return ref.watch(budgetProvider).safeToSpendToday;
+});
+
+/// Expired role-tagged budgets with leftover balance (rollover candidates).
+final expiredRoleRolloverCandidatesProvider =
+    Provider<List<BudgetWithSpent>>((ref) {
+  final expired = ref.watch(budgetProvider).expiredBudgets;
+  return expiredRoleBudgetsWithRemaining(expired);
 });

@@ -9,7 +9,9 @@ import '../transactions/transactions_screen.dart';
 import 'widgets/welcome_section.dart';
 import 'widgets/account_section.dart';
 import 'widgets/budget_section.dart';
+import 'widgets/role_leftover_banner.dart';
 import 'widgets/role_progress_section.dart';
+import '../roles/role_rollover_screen.dart';
 import 'widgets/spending_graph.dart';
 import 'widgets/transaction_tabs.dart';
 
@@ -21,14 +23,22 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _roleRolloverPromptedThisSession = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(accountProvider.notifier).loadAccounts();
       ref.read(categoryProvider.notifier).loadCategories();
       ref.read(transactionProvider.notifier).loadTransactions(refresh: true);
-      ref.read(budgetProvider.notifier).loadBudgets();
+      await ref.read(budgetProvider.notifier).loadBudgets();
+      if (!mounted || _roleRolloverPromptedThisSession) return;
+      final pending =
+          ref.read(expiredRoleRolloverCandidatesProvider).isNotEmpty;
+      if (!pending) return;
+      _roleRolloverPromptedThisSession = true;
+      await checkAndPromptRollover(context, ref);
     });
   }
 
@@ -95,8 +105,14 @@ class _HomeBudgetPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final roleTrioActive = ref.watch(hasActiveRoleBudgetTrioProvider);
-    return roleTrioActive
-        ? const RoleProgressSection()
-        : const BudgetSection();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const RoleLeftoverBanner(),
+        roleTrioActive
+            ? const RoleProgressSection()
+            : const BudgetSection(),
+      ],
+    );
   }
 }

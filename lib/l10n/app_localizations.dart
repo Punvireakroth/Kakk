@@ -985,6 +985,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} days left in budget'**
   String daysLeftInBudget(int count);
+
+  /// No description provided for @roleRolloverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use leftover role funds'**
+  String get roleRolloverTitle;
+
+  /// No description provided for @roleRolloverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Needs / Wants / Goals period ended with money left. Move extra into Goals or keep it in the same role next month.'**
+  String get roleRolloverSubtitle;
+
+  /// No description provided for @roleRolloverLeftover.
+  ///
+  /// In en, this message translates to:
+  /// **'Leftover: {amount}'**
+  String roleRolloverLeftover(String amount);
+
+  /// No description provided for @moveToGoalsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get moveToGoalsLabel;
+
+  /// No description provided for @carryForwardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Same role'**
+  String get carryForwardLabel;
+
+  /// No description provided for @carryForwardOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This slice rolls forward into the same role next period.'**
+  String get carryForwardOnlyHint;
+
+  /// No description provided for @roleRolloverConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply choices'**
+  String get roleRolloverConfirm;
+
+  /// No description provided for @roleRolloverSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Rollover saved'**
+  String get roleRolloverSuccess;
+
+  /// No description provided for @roleLeftoverBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leftover from role budgets'**
+  String get roleLeftoverBannerTitle;
+
+  /// No description provided for @roleLeftoverBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} budgets · tap to move or carry forward'**
+  String roleLeftoverBannerSubtitle(int count);
+
+  /// No description provided for @roleLeftoverBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve'**
+  String get roleLeftoverBannerAction;
 }
 
 class _AppLocalizationsDelegate

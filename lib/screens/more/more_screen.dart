@@ -22,6 +22,7 @@ class MoreScreen extends ConsumerStatefulWidget {
 
 class _MoreScreenState extends ConsumerState<MoreScreen> {
   bool _demoSeedBusy = false;
+  bool _rolloverDemoBusy = false;
 
   @override
   void initState() {
@@ -179,9 +180,26 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               'Seed sample data for demo',
               style: TextStyle(fontSize: 12),
             ),
-            enabled: !_demoSeedBusy,
+            enabled: !_demoSeedBusy && !_rolloverDemoBusy,
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _onSeedDemoFinancialData,
+          ),
+          ListTile(
+            leading: _rolloverDemoBusy
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.swap_horiz, color: Colors.teal),
+            title: const Text('Seed rollover demo (expired roles)'),
+            subtitle: const Text(
+              'Last month’s Needs/Wants/Goals with leftover — open Home to test rollover',
+              style: TextStyle(fontSize: 12),
+            ),
+            enabled: !_demoSeedBusy && !_rolloverDemoBusy,
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: _onSeedRolloverDemo,
           ),
         ],
       ),
@@ -241,6 +259,66 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       );
     } finally {
       if (mounted) setState(() => _demoSeedBusy = false);
+    }
+  }
+
+  Future<void> _onSeedRolloverDemo() async {
+    final db = DatabaseService();
+    final seeding = SeedingService(db);
+    var replace = false;
+    if (await seeding.hasRoleRolloverDemoSeed() && mounted) {
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Replace rollover demo?'),
+          content: const Text(
+            'Rollover demo budgets already exist. Replace them with a fresh '
+            'set for last calendar month?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Replace'),
+            ),
+          ],
+        ),
+      );
+      if (choice != true || !mounted) return;
+      replace = true;
+    }
+
+    setState(() => _rolloverDemoBusy = true);
+    try {
+      await seeding.seedExpiredRoleBudgetsForRolloverDemo(
+        replaceExisting: replace,
+      );
+      ref.invalidate(accountProvider);
+      ref.invalidate(budgetProvider);
+      ref.invalidate(transactionProvider);
+      ref.invalidate(categoryProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Rollover demo seeded — open Home (or pull to refresh budgets)',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Rollover seed failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _rolloverDemoBusy = false);
     }
   }
 

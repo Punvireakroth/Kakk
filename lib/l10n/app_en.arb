@@ -257,5 +257,28 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+
+  "roleRolloverTitle": "Use leftover role funds",
+  "roleRolloverSubtitle": "Your Needs / Wants / Goals period ended with money left. Move extra into Goals or keep it in the same role next month.",
+  "roleRolloverLeftover": "Leftover: {amount}",
+  "@roleRolloverLeftover": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "moveToGoalsLabel": "Goals",
+  "carryForwardLabel": "Same role",
+  "carryForwardOnlyHint": "This slice rolls forward into the same role next period.",
+  "roleRolloverConfirm": "Apply choices",
+  "roleRolloverSuccess": "Rollover saved",
+
+  "roleLeftoverBannerTitle": "Leftover from role budgets",
+  "roleLeftoverBannerSubtitle": "{count} budgets · tap to move or carry forward",
+  "@roleLeftoverBannerSubtitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "roleLeftoverBannerAction": "Resolve"
 }

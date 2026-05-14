@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'database_service.dart';
 import '../models/account.dart';
 import '../models/budget.dart';
 import '../models/category.dart';
 import '../models/transaction.dart' as app_models;
+import '../utils/budget_role_type.dart';
+import '../utils/budget_rule_categories.dart';
 
 /// Service to seed default data into the database
 class SeedingService {
@@ -16,6 +19,12 @@ class SeedingService {
 
   /// Budget ids for [seedDemoFinancialData] start with this prefix (names stay realistic).
   static const String seedBudgetIdPrefix = 'ccseed_b_';
+
+  /// Budget ids for [seedExpiredRoleBudgetsForRolloverDemo] (cleanup via [removeRoleRolloverDemoSeed]).
+  static const String seedRoleRolloverBudgetIdPrefix = 'ccseed_rollover_rb_';
+
+  /// Transaction marker for rollover demo rows (removed with demo budgets cleanup).
+  static const String rolloverDemoTransactionMarker = '[[cashchew-rollover-demo]]';
 
   /// Legacy seeded budgets used this name prefix; still removed when replacing seed.
   static const String legacyDemoBudgetNamePrefix = '[Demo] ';
@@ -269,6 +278,198 @@ class SeedingService {
       whereArgs: ['$seedBudgetIdPrefix%', '$legacyDemoBudgetNamePrefix%'],
     );
     print('Demo financial seed removed');
+  }
+
+  Future<bool> hasRoleRolloverDemoSeed() async {
+    final db = await _db.database;
+    final rows = await db.rawQuery(
+      'SELECT COUNT(*) AS c FROM budgets WHERE id LIKE ?',
+      ['$seedRoleRolloverBudgetIdPrefix%'],
+    );
+    final n = rows.first['c'];
+    return (n is int && n > 0) || (n is num && n > 0);
+  }
+
+  /// Deletes rollover demo budgets and their marker transactions.
+  Future<void> removeRoleRolloverDemoSeed() async {
+    final db = await _db.database;
+    await db.delete(
+      'transactions',
+      where: 'notes LIKE ?',
+      whereArgs: ['%$rolloverDemoTransactionMarker%'],
+    );
+    await db.delete(
+      'budgets',
+      where: 'id LIKE ?',
+      whereArgs: ['$seedRoleRolloverBudgetIdPrefix%'],
+    );
+    print('Rollover demo seed removed');
+  }
+
+  /// Inserts **expired** Needs/Wants/Goals role budgets for the **previous calendar month**
+  /// with partial spending so each has **remaining > 0** → home shows rollover flow.
+  ///
+  /// Safe to run beside other data; ids use [seedRoleRolloverBudgetIdPrefix].
+  Future<void> seedExpiredRoleBudgetsForRolloverDemo({
+    bool replaceExisting = false,
+  }) async {
+    await seedDefaultData();
+
+    if (replaceExisting) {
+      await removeRoleRolloverDemoSeed();
+    } else if (await hasRoleRolloverDemoSeed()) {
+      throw StateError(
+        'Rollover demo budgets already exist. Call with replaceExisting: true to refresh.',
+      );
+    }
+
+    final categories = await _db.getCategories();
+    final byName = {for (final c in categories) c.name: c.id};
+    const required = [
+      'Salary',
+      'Food & Dining',
+      'Shopping',
+      'Savings Transfer',
+    ];
+    for (final name in required) {
+      if (!byName.containsKey(name)) {
+        throw StateError('Missing category "$name". Run default seed first.');
+      }
+    }
+
+    final expenseCategories = await _db.getCategories(type: 'expense');
+    final categorized =
+        BudgetRuleCategorizer.categorizeExpenses(expenseCategories);
+    final needsIds =
+        categorized[BudgetRuleType.needs]!.map((c) => c.id).toList();
+    final wantsIds =
+        categorized[BudgetRuleType.wants]!.map((c) => c.id).toList();
+    final savingsIds =
+        categorized[BudgetRuleType.savings]!.map((c) => c.id).toList();
+    if (needsIds.isEmpty || wantsIds.isEmpty || savingsIds.isEmpty) {
+      throw StateError(
+        'Needs/Wants/Savings category buckets empty — check expense categories.',
+      );
+    }
+
+    final clock = DateTime.now();
+    final nowMs = clock.millisecondsSinceEpoch;
+    var accounts = await _db.getAccounts();
+    late final String accountId;
+    if (accounts.isEmpty) {
+      accountId = _uuid.v4();
+      await _db.insertAccount(
+        Account(
+          id: accountId,
+          name: 'Primary checking',
+          balance: 0,
+          currency: 'USD',
+          createdAt: nowMs,
+          updatedAt: nowMs,
+        ),
+      );
+    } else {
+      accountId = accounts.first.id;
+    }
+
+    final prevMonthStart = DateTime(clock.year, clock.month - 1, 1);
+    final prevMonthEnd =
+        DateTime(clock.year, clock.month, 0, 23, 59, 59, 999);
+    final startMs = prevMonthStart.millisecondsSinceEpoch;
+    final endMs = prevMonthEnd.millisecondsSinceEpoch;
+    final periodLabel = DateFormat('MMM yyyy').format(prevMonthStart);
+
+    Future<void> addRoleBudget({
+      required BudgetRoleType role,
+      required double limitAmount,
+      required List<String> categoryIds,
+    }) async {
+      final id = '$seedRoleRolloverBudgetIdPrefix${role.storageValue}';
+      final budget = Budget(
+        id: id,
+        name: '${role.displayName} · $periodLabel · rollover demo',
+        accountId: null,
+        limitAmount: limitAmount,
+        startDate: startMs,
+        endDate: endMs,
+        roleType: role,
+        createdAt: nowMs,
+        updatedAt: nowMs,
+      );
+      await _db.insertBudget(budget);
+      await _db.setBudgetCategories(budget.id, categoryIds);
+    }
+
+    const needsLimit = 2000.0;
+    const wantsLimit = 900.0;
+    const goalsLimit = 400.0;
+
+    await addRoleBudget(
+      role: BudgetRoleType.needs,
+      limitAmount: needsLimit,
+      categoryIds: needsIds,
+    );
+    await addRoleBudget(
+      role: BudgetRoleType.wants,
+      limitAmount: wantsLimit,
+      categoryIds: wantsIds,
+    );
+    await addRoleBudget(
+      role: BudgetRoleType.goals,
+      limitAmount: goalsLimit,
+      categoryIds: savingsIds,
+    );
+
+    Future<void> demoTx(
+      String title,
+      String categoryName,
+      double amount,
+      DateTime when,
+    ) async {
+      await _db.insertTransaction(
+        app_models.Transaction(
+          id: _uuid.v4(),
+          accountId: accountId,
+          categoryId: byName[categoryName]!,
+          amount: amount,
+          title: title,
+          notes: rolloverDemoTransactionMarker,
+          date: when.millisecondsSinceEpoch,
+          createdAt: nowMs,
+          updatedAt: nowMs,
+        ),
+      );
+    }
+
+    await demoTx(
+      '[Demo] Paycheck',
+      'Salary',
+      6000,
+      DateTime(prevMonthStart.year, prevMonthStart.month, 5),
+    );
+    await demoTx(
+      '[Demo] Groceries',
+      'Food & Dining',
+      350,
+      DateTime(prevMonthStart.year, prevMonthStart.month, 8),
+    );
+    await demoTx(
+      '[Demo] Online order',
+      'Shopping',
+      120,
+      DateTime(prevMonthStart.year, prevMonthStart.month, 14),
+    );
+    await demoTx(
+      '[Demo] Savings jar',
+      'Savings Transfer',
+      60,
+      DateTime(prevMonthStart.year, prevMonthStart.month, 20),
+    );
+
+    await _recalculateAccountBalance(accountId);
+    print(
+      'Rollover demo: expired role trio $periodLabel (needs/wants/goals leftover)',
+    );
   }
 
   /// Seeds realistic accounts, budgets, and transactions:

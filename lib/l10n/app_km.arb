@@ -257,5 +257,28 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+
+  "roleRolloverTitle": "ប្រើប្រាស់ប្រាក់នៅសល់តាមតួនាទី",
+  "roleRolloverSubtitle": "រយៈពេលតម្រូវការ / ចង់បាន / គោលដៅបានបញ្ចប់ដោយមានប្រាក់នៅសល់។ ផ្ទេរបន្ថែមទៅគោលដៅ ឬរក្សានៅតួនាទីដដែលសម្រាប់ខែបន្ទាប់។",
+  "roleRolloverLeftover": "នៅសល់៖ {amount}",
+  "@roleRolloverLeftover": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "moveToGoalsLabel": "គោលដៅ",
+  "carryForwardLabel": "តួនាទីដដែល",
+  "carryForwardOnlyHint": "ផ្នែកនេះនឹងបន្តទៅរយៈពេលបន្ទាប់ក្នុងតួនាទីដដែល។",
+  "roleRolloverConfirm": "អនុវត្តការជ្រើសរើស",
+  "roleRolloverSuccess": "បានរក្សាទុកការបន្ត",
+
+  "roleLeftoverBannerTitle": "ប្រាក់នៅសល់ពីថវិកាតាមតួនាទី",
+  "roleLeftoverBannerSubtitle": "ថវិកា {count} · ចុចដើម្បីផ្ទេរ ឬបន្ត",
+  "@roleLeftoverBannerSubtitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "roleLeftoverBannerAction": "ដោះស្រាយ"
 }

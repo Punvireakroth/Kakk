@@ -501,4 +501,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysLeftInBudget(int count) {
     return '$count days left in budget';
   }
+
+  @override
+  String get roleRolloverTitle => 'Use leftover role funds';
+
+  @override
+  String get roleRolloverSubtitle =>
+      'Your Needs / Wants / Goals period ended with money left. Move extra into Goals or keep it in the same role next month.';
+
+  @override
+  String roleRolloverLeftover(String amount) {
+    return 'Leftover: $amount';
+  }
+
+  @override
+  String get moveToGoalsLabel => 'Goals';
+
+  @override
+  String get carryForwardLabel => 'Same role';
+
+  @override
+  String get carryForwardOnlyHint =>
+      'This slice rolls forward into the same role next period.';
+
+  @override
+  String get roleRolloverConfirm => 'Apply choices';
+
+  @override
+  String get roleRolloverSuccess => 'Rollover saved';
+
+  @override
+  String get roleLeftoverBannerTitle => 'Leftover from role budgets';
+
+  @override
+  String roleLeftoverBannerSubtitle(int count) {
+    return '$count budgets · tap to move or carry forward';
+  }
+
+  @override
+  String get roleLeftoverBannerAction => 'Resolve';
 }

@@ -14,7 +14,12 @@ class BudgetExpiredBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final budgetState = ref.watch(budgetProvider);
-    final expiredBudgets = budgetState.expiredBudgets;
+    final expiredBudgets = budgetState.expiredBudgets
+        .where(
+          (b) =>
+              !(b.budget.roleType != null && b.remaining > 0.009),
+        )
+        .toList();
     if (expiredBudgets.isEmpty) return const SizedBox.shrink();
 
     final settings = ref.watch(settingsProvider);

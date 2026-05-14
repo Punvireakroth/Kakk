@@ -489,4 +489,43 @@ class AppLocalizationsKm extends AppLocalizations {
   String daysLeftInBudget(int count) {
     return 'នៅសល់ $count ថ្ងៃក្នុងថវិកា';
   }
+
+  @override
+  String get roleRolloverTitle => 'ប្រើប្រាស់ប្រាក់នៅសល់តាមតួនាទី';
+
+  @override
+  String get roleRolloverSubtitle =>
+      'រយៈពេលតម្រូវការ / ចង់បាន / គោលដៅបានបញ្ចប់ដោយមានប្រាក់នៅសល់។ ផ្ទេរបន្ថែមទៅគោលដៅ ឬរក្សានៅតួនាទីដដែលសម្រាប់ខែបន្ទាប់។';
+
+  @override
+  String roleRolloverLeftover(String amount) {
+    return 'នៅសល់៖ $amount';
+  }
+
+  @override
+  String get moveToGoalsLabel => 'គោលដៅ';
+
+  @override
+  String get carryForwardLabel => 'តួនាទីដដែល';
+
+  @override
+  String get carryForwardOnlyHint =>
+      'ផ្នែកនេះនឹងបន្តទៅរយៈពេលបន្ទាប់ក្នុងតួនាទីដដែល។';
+
+  @override
+  String get roleRolloverConfirm => 'អនុវត្តការជ្រើសរើស';
+
+  @override
+  String get roleRolloverSuccess => 'បានរក្សាទុកការបន្ត';
+
+  @override
+  String get roleLeftoverBannerTitle => 'ប្រាក់នៅសល់ពីថវិកាតាមតួនាទី';
+
+  @override
+  String roleLeftoverBannerSubtitle(int count) {
+    return 'ថវិកា $count · ចុចដើម្បីផ្ទេរ ឬបន្ត';
+  }
+
+  @override
+  String get roleLeftoverBannerAction => 'ដោះស្រាយ';
 }

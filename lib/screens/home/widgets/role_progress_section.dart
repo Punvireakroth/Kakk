@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../providers/account_provider.dart';
 import '../../../providers/budget_provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../utils/budget_role_type.dart';
@@ -55,6 +56,11 @@ class RoleProgressSection extends ConsumerWidget {
     final wants = _activeRole(budgetState, BudgetRoleType.wants);
     final goals = _activeRole(budgetState, BudgetRoleType.goals);
 
+    final accounts = ref.watch(accountProvider).accounts;
+    final currency =
+        accounts.isNotEmpty ? accounts.first.currency : 'USD';
+    final safeDaily = ref.watch(safeToSpendTodayProvider);
+
     final barRows = <Widget>[];
     void gap() {
       if (barRows.isNotEmpty) barRows.add(const SizedBox(height: 16));
@@ -96,6 +102,37 @@ class RoleProgressSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const BudgetExpiredBanner(),
+        if (safeDaily != null && safeDaily > 0) ...[
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFC8E6C9)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.shopping_bag_outlined,
+                    color: accentColor, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.safeToSpendTodayBanner(
+                      CurrencyFormatter.format(safeDaily,
+                          currency: currency),
+                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
