@@ -84,6 +84,19 @@ class BudgetState {
       return b.budget.startDate > now && !b.budget.isArchived;
     }).toList();
   }
+
+  /// Loaded non-archived budgets that were created from the role split (Needs / Wants / Goals).
+  List<BudgetWithSpent> get roleBudgets =>
+      budgets.where((b) => b.budget.roleType != null).toList();
+
+  /// Per-day discretionary room from the **active** [BudgetRoleType.wants] budget.
+  /// Matches [BudgetWithSpent.remaining] / [BudgetWithSpent.daysRemaining] (see [BudgetWithSpent.dailyAllowance]).
+  double? get safeToSpendToday {
+    final wants = activeBudgets
+        .where((b) => b.budget.roleType == BudgetRoleType.wants)
+        .firstOrNull;
+    return wants?.dailyAllowance;
+  }
 }
 
 /// Budget provider using Riverpod StateNotifier
@@ -609,4 +622,14 @@ final expiredBudgetsProvider = Provider<List<BudgetWithSpent>>((ref) {
 final archivedBudgetsProvider = Provider<List<BudgetWithSpent>>((ref) {
   final state = ref.watch(budgetProvider);
   return state.archivedBudgets;
+});
+
+/// Role-tagged budgets (non-archived list from [BudgetState.budgets]).
+final roleBudgetsProvider = Provider<List<BudgetWithSpent>>((ref) {
+  return ref.watch(budgetProvider).roleBudgets;
+});
+
+/// Safe-to-spend-today from the active Wants role budget, if any.
+final safeToSpendTodayProvider = Provider<double?>((ref) {
+  return ref.watch(budgetProvider).safeToSpendToday;
 });
