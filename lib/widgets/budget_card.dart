@@ -23,7 +23,7 @@ class BudgetCard extends StatelessWidget {
 
   // Default accent color (used as fallback)
   static const Color _defaultAccent = Color(0xFF6B7FD7);
-  
+
   Color get _darkAccent => accentColor ?? _defaultAccent;
   Color get _cardColor => _darkAccent.withOpacity(0.15);
 
@@ -40,6 +40,9 @@ class BudgetCard extends StatelessWidget {
     final timelineProgress = totalDays > 0
         ? (daysPassed / totalDays).clamp(0.0, 1.0)
         : 0.0;
+
+    final themeAccent = Theme.of(context).colorScheme.primary;
+    final progressAccent = accentColor ?? themeAccent;
 
     return GestureDetector(
       onTap: onTap,
@@ -139,71 +142,67 @@ class BudgetCard extends StatelessWidget {
             ),
             // Timeline section
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
-                  // Today marker with timeline
+                  // Today marker + progress bar (stem cuts through bar like home)
                   SizedBox(
-                    height: 60,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final markerPosition =
-                            constraints.maxWidth * timelineProgress;
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            // Progress bar background at bottom
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                height: 8,
+                    height: 52,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: progressAccent,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment(
+                            2 * timelineProgress.clamp(0.0, 1.0) - 1,
+                            1,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
+                                  color: _darkAccent,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                              ),
-                            ),
-                            // Today marker
-                            Positioned(
-                              left: (markerPosition - 24).clamp(
-                                0,
-                                constraints.maxWidth - 48,
-                              ),
-                              top: 0,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _darkAccent,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      'Today',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                child: const Text(
+                                  'Today',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
-                                  Container(
-                                    width: 2,
-                                    height: 28,
-                                    color: _darkAccent,
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
+                              Container(
+                                width: 2,
+                                height: 22,
+                                color: _darkAccent,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),

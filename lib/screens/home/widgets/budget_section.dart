@@ -584,10 +584,14 @@ class BudgetSection extends ConsumerWidget {
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12),
-                height: 4,
+                height: 8,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: accentColor,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
