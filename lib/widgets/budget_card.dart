@@ -73,16 +73,21 @@ class BudgetCard extends StatelessWidget {
                 children: [
                   // Budget name and history icon
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        budget.name,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                      Expanded(
+                        child: Text(
+                          budget.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: onHistoryTap,
                         child: Container(
@@ -102,8 +107,8 @@ class BudgetCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   // Amount remaining
-                  RichText(
-                    text: TextSpan(
+                  Text.rich(
+                    TextSpan(
                       children: [
                         TextSpan(
                           text: CurrencyFormatter.format(budgetData.remaining),
@@ -124,6 +129,7 @@ class BudgetCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    softWrap: true,
                   ),
                   const SizedBox(height: 12),
                   // Account and categories info
@@ -203,28 +209,39 @@ class BudgetCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   // Date labels and percentage
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        DateFormat('MMM d').format(startDate),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
+                      Expanded(
+                        child: Text(
+                          DateFormat('MMM d').format(startDate),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
-                      Text(
-                        '${budgetData.percentage.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _getStatusColor(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          '${budgetData.percentage.toStringAsFixed(0)}%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _getStatusColor(),
+                          ),
                         ),
                       ),
-                      Text(
-                        DateFormat('MMM d').format(endDate),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
+                      Expanded(
+                        child: Text(
+                          DateFormat('MMM d').format(endDate),
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
                     ],
@@ -234,6 +251,7 @@ class BudgetCard extends StatelessWidget {
                   Text(
                     _getDailyAllowanceText(),
                     style: TextStyle(fontSize: 13, color: _getStatusColor()),
+                    softWrap: true,
                   ),
                 ],
               ),
@@ -271,9 +289,10 @@ class BudgetCard extends StatelessWidget {
         ? 'All Accounts'
         : (accountName ?? 'Specific Account');
 
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        // Account chip
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
@@ -302,8 +321,6 @@ class BudgetCard extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        // Categories chip
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(

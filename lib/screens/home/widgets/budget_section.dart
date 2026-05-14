@@ -469,16 +469,21 @@ class BudgetSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              name,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -490,26 +495,38 @@ class BudgetSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Icon(
-              budgetData.budget.tracksAllAccounts
-                  ? Icons.account_balance_wallet
-                  : Icons.account_balance,
-              size: 12,
-              color: accentColor,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  budgetData.budget.tracksAllAccounts
+                      ? Icons.account_balance_wallet
+                      : Icons.account_balance,
+                  size: 12,
+                  color: accentColor,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  accountText,
+                  style: const TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Text(
-              accountText,
-              style: const TextStyle(fontSize: 11, color: Colors.black54),
-            ),
-            const SizedBox(width: 12),
-            Icon(Icons.category_outlined, size: 12, color: accentColor),
-            const SizedBox(width: 4),
-            Text(
-              l10n.categoryCount(categoryCount),
-              style: const TextStyle(fontSize: 11, color: Colors.black54),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.category_outlined, size: 12, color: accentColor),
+                const SizedBox(width: 4),
+                Text(
+                  l10n.categoryCount(categoryCount),
+                  style: const TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+              ],
             ),
           ],
         ),
@@ -521,8 +538,8 @@ class BudgetSection extends ConsumerWidget {
     BudgetWithSpent budgetData,
     AppLocalizations l10n,
   ) {
-    return RichText(
-      text: TextSpan(
+    return Text.rich(
+      TextSpan(
         children: [
           TextSpan(
             text: CurrencyFormatter.format(budgetData.remaining),
@@ -543,6 +560,7 @@ class BudgetSection extends ConsumerWidget {
           ),
         ],
       ),
+      softWrap: true,
     );
   }
 

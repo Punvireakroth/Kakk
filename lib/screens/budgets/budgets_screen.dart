@@ -590,6 +590,9 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen>
               padding: const EdgeInsets.all(20),
               child: Text(
                 budgetData.budget.name,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

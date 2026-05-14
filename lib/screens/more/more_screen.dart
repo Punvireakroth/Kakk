@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/account_provider.dart';
 import '../../providers/backup_provider.dart';
+import '../../providers/budget_provider.dart';
+import '../../providers/category_provider.dart';
+import '../../providers/transaction_provider.dart';
 import '../../services/database_service.dart';
+import '../../services/seeding_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../settings/settings_screen.dart';
 
@@ -16,6 +21,8 @@ class MoreScreen extends ConsumerStatefulWidget {
 }
 
 class _MoreScreenState extends ConsumerState<MoreScreen> {
+  bool _demoSeedBusy = false;
+
   @override
   void initState() {
     super.initState();
@@ -159,9 +166,82 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => _showClearDataConfirmDialog(),
           ),
+          ListTile(
+            leading: _demoSeedBusy
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_fix_high, color: Colors.deepPurple),
+            title: const Text('Seed demo financial data'),
+            subtitle: const Text(
+              'Seed sample data for demo',
+              style: TextStyle(fontSize: 12),
+            ),
+            enabled: !_demoSeedBusy,
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: _onSeedDemoFinancialData,
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _onSeedDemoFinancialData() async {
+    final db = DatabaseService();
+    final seeding = SeedingService(db);
+    var replace = false;
+    if (await seeding.hasDemoFinancialSeed() && mounted) {
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Replace sample data?'),
+          content: const Text(
+            'Sample budgets and matching transactions are already in the database. '
+            'Replace them with a fresh scenario?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Replace'),
+            ),
+          ],
+        ),
+      );
+      if (choice != true || !mounted) return;
+      replace = true;
+    }
+
+    setState(() => _demoSeedBusy = true);
+    try {
+      await seeding.seedDemoFinancialData(replaceExisting: replace);
+      ref.invalidate(accountProvider);
+      ref.invalidate(budgetProvider);
+      ref.invalidate(transactionProvider);
+      ref.invalidate(categoryProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sample financial data seeded'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Seed failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _demoSeedBusy = false);
+    }
   }
 
   void _showResetConfirmDialog() {
