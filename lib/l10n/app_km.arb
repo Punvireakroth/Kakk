@@ -233,5 +233,29 @@
   "savingsBudget": "ថវិកាសន្សំ",
 
   "pleaseEnterAmount": "សូមបញ្ចូលចំនួនប្រាក់",
-  "pleaseEnterValidAmount": "សូមបញ្ចូលចំនួនប្រាក់ត្រឹមត្រូវ"
+  "pleaseEnterValidAmount": "សូមបញ្ចូលចំនួនប្រាក់ត្រឹមត្រូវ",
+
+  "roleBudgetSectionTitle": "ផែនការរបស់អ្នក",
+  "roleBudgetSectionSubtitle": "តម្រូវការ ចង់បាន និងគោលដៅ ខែនេះ",
+  "goals": "គោលដៅ",
+  "allocatedLabel": "បានកំណត់",
+  "remainingLabel": "នៅសល់",
+  "safeToSpendTodayBanner": "អ្នកអាចចំណាយបានយ៉ាងមានសុវត្ថិភាព {amount} ថ្ងៃនេះ ពីក្រុមចង់បាន។",
+  "@safeToSpendTodayBanner": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "percentLeftBudget": "នៅសល់ {percent}%",
+  "@percentLeftBudget": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "daysLeftInBudget": "នៅសល់ {count} ថ្ងៃក្នុងថវិកា",
+  "@daysLeftInBudget": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }

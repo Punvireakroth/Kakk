@@ -624,6 +624,18 @@ final archivedBudgetsProvider = Provider<List<BudgetWithSpent>>((ref) {
   return state.archivedBudgets;
 });
 
+/// True when Needs, Wants, and Goals role budgets overlap the current date.
+final hasActiveRoleBudgetTrioProvider = Provider<bool>((ref) {
+  final roles = <BudgetRoleType>{};
+  for (final b in ref.watch(budgetProvider).activeBudgets) {
+    final r = b.budget.roleType;
+    if (r != null) roles.add(r);
+  }
+  return roles.contains(BudgetRoleType.needs) &&
+      roles.contains(BudgetRoleType.wants) &&
+      roles.contains(BudgetRoleType.goals);
+});
+
 /// Role-tagged budgets (non-archived list from [BudgetState.budgets]).
 final roleBudgetsProvider = Provider<List<BudgetWithSpent>>((ref) {
   return ref.watch(budgetProvider).roleBudgets;

@@ -937,6 +937,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter a valid amount'**
   String get pleaseEnterValidAmount;
+
+  /// No description provided for @roleBudgetSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan'**
+  String get roleBudgetSectionTitle;
+
+  /// No description provided for @roleBudgetSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs, Wants & Goals this month'**
+  String get roleBudgetSectionSubtitle;
+
+  /// No description provided for @goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get goals;
+
+  /// No description provided for @allocatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocated'**
+  String get allocatedLabel;
+
+  /// No description provided for @remainingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get remainingLabel;
+
+  /// No description provided for @safeToSpendTodayBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You can safely spend {amount} today from Wants.'**
+  String safeToSpendTodayBanner(String amount);
+
+  /// No description provided for @percentLeftBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% left'**
+  String percentLeftBudget(String percent);
+
+  /// No description provided for @daysLeftInBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days left in budget'**
+  String daysLeftInBudget(int count);
 }
 
 class _AppLocalizationsDelegate

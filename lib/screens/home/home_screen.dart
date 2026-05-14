@@ -9,6 +9,7 @@ import '../transactions/transactions_screen.dart';
 import 'widgets/welcome_section.dart';
 import 'widgets/account_section.dart';
 import 'widgets/budget_section.dart';
+import 'widgets/role_progress_section.dart';
 import 'widgets/spending_graph.dart';
 import 'widgets/transaction_tabs.dart';
 
@@ -63,7 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SizedBox(height: 24),
                   AccountSection(),
                   SizedBox(height: 24),
-                  BudgetSection(),
+                  _HomeBudgetPanel(),
                   SizedBox(height: 24),
                   SpendingGraph(),
                   SizedBox(height: 24),
@@ -84,5 +85,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: const Icon(Icons.add, size: 28),
       ),
     );
+  }
+}
+
+/// Role dashboard when Needs, Wants, and Goals are all active for the period; otherwise the legacy budget block.
+class _HomeBudgetPanel extends ConsumerWidget {
+  const _HomeBudgetPanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roleTrioActive = ref.watch(hasActiveRoleBudgetTrioProvider);
+    return roleTrioActive
+        ? const RoleProgressSection()
+        : const BudgetSection();
   }
 }

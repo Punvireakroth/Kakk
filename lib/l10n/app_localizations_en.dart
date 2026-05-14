@@ -471,4 +471,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseEnterValidAmount => 'Please enter a valid amount';
+
+  @override
+  String get roleBudgetSectionTitle => 'Your plan';
+
+  @override
+  String get roleBudgetSectionSubtitle => 'Needs, Wants & Goals this month';
+
+  @override
+  String get goals => 'Goals';
+
+  @override
+  String get allocatedLabel => 'Allocated';
+
+  @override
+  String get remainingLabel => 'Left';
+
+  @override
+  String safeToSpendTodayBanner(String amount) {
+    return 'You can safely spend $amount today from Wants.';
+  }
+
+  @override
+  String percentLeftBudget(String percent) {
+    return '$percent% left';
+  }
+
+  @override
+  String daysLeftInBudget(int count) {
+    return '$count days left in budget';
+  }
 }

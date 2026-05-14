@@ -459,4 +459,34 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get pleaseEnterValidAmount => 'សូមបញ្ចូលចំនួនប្រាក់ត្រឹមត្រូវ';
+
+  @override
+  String get roleBudgetSectionTitle => 'ផែនការរបស់អ្នក';
+
+  @override
+  String get roleBudgetSectionSubtitle => 'តម្រូវការ ចង់បាន និងគោលដៅ ខែនេះ';
+
+  @override
+  String get goals => 'គោលដៅ';
+
+  @override
+  String get allocatedLabel => 'បានកំណត់';
+
+  @override
+  String get remainingLabel => 'នៅសល់';
+
+  @override
+  String safeToSpendTodayBanner(String amount) {
+    return 'អ្នកអាចចំណាយបានយ៉ាងមានសុវត្ថិភាព $amount ថ្ងៃនេះ ពីក្រុមចង់បាន។';
+  }
+
+  @override
+  String percentLeftBudget(String percent) {
+    return 'នៅសល់ $percent%';
+  }
+
+  @override
+  String daysLeftInBudget(int count) {
+    return 'នៅសល់ $count ថ្ងៃក្នុងថវិកា';
+  }
 }

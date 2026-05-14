@@ -233,5 +233,29 @@
   "savingsBudget": "Savings Budget",
 
   "pleaseEnterAmount": "Please enter an amount",
-  "pleaseEnterValidAmount": "Please enter a valid amount"
+  "pleaseEnterValidAmount": "Please enter a valid amount",
+
+  "roleBudgetSectionTitle": "Your plan",
+  "roleBudgetSectionSubtitle": "Needs, Wants & Goals this month",
+  "goals": "Goals",
+  "allocatedLabel": "Allocated",
+  "remainingLabel": "Left",
+  "safeToSpendTodayBanner": "You can safely spend {amount} today from Wants.",
+  "@safeToSpendTodayBanner": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "percentLeftBudget": "{percent}% left",
+  "@percentLeftBudget": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "daysLeftInBudget": "{count} days left in budget",
+  "@daysLeftInBudget": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }
