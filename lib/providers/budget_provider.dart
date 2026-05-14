@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../models/budget.dart';
 import '../services/database_service.dart';
+import '../utils/budget_role_type.dart';
+import '../utils/budget_rule_categories.dart';
 
 /// Data class to hold budget with its spending info
 class BudgetWithSpent {
@@ -360,6 +363,134 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
   /// Clear any error messages
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// Whether non-archived role budgets exist for all three roles overlapping [periodStartMs]–[periodEndMs].
+  Future<bool> hasActiveRoleBudgetTrioForPeriod({
+    required int periodStartMs,
+    required int periodEndMs,
+  }) async {
+    final budgets = await _db.getNonArchivedBudgets();
+    final roles = <BudgetRoleType>{};
+    for (final b in budgets) {
+      if (b.roleType == null) continue;
+      final overlaps =
+          b.startDate <= periodEndMs && b.endDate >= periodStartMs;
+      if (overlaps) roles.add(b.roleType!);
+    }
+    return roles.contains(BudgetRoleType.needs) &&
+        roles.contains(BudgetRoleType.wants) &&
+        roles.contains(BudgetRoleType.goals);
+  }
+
+  /// Same as [hasActiveRoleBudgetTrioForPeriod] for the current calendar month.
+  Future<bool> hasActiveRoleBudgetTrioForCurrentPeriod() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1).millisecondsSinceEpoch;
+    final end = DateTime(
+      now.year,
+      now.month + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    ).millisecondsSinceEpoch;
+    return hasActiveRoleBudgetTrioForPeriod(
+      periodStartMs: start,
+      periodEndMs: end,
+    );
+  }
+
+  /// Create three role-tagged budgets (50/30/20 buckets) from income, using [BudgetRuleCategorizer] categories.
+  Future<bool> createRoleBudgets({
+    required String? accountId,
+    required double incomeAmount,
+    required double needs,
+    required double wants,
+    required double goals,
+    required int startDate,
+    required int endDate,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final total = needs + wants + goals;
+      if ((total - incomeAmount).abs() > 0.02) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Assigned amounts must equal your income',
+        );
+        return false;
+      }
+
+      final expenseCategories = await _db.getCategories(type: 'expense');
+      final categorized =
+          BudgetRuleCategorizer.categorizeExpenses(expenseCategories);
+      final needsIds =
+          categorized[BudgetRuleType.needs]!.map((c) => c.id).toList();
+      final wantsIds =
+          categorized[BudgetRuleType.wants]!.map((c) => c.id).toList();
+      final savingsIds =
+          categorized[BudgetRuleType.savings]!.map((c) => c.id).toList();
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final uuid = const Uuid();
+      final periodLabel = DateFormat(
+        'MMM yyyy',
+      ).format(DateTime.fromMillisecondsSinceEpoch(startDate));
+
+      Future<void> insertRoleSlice({
+        required BudgetRoleType role,
+        required double amount,
+        required List<String> categoryIds,
+      }) async {
+        if (amount <= 0) return;
+        if (categoryIds.isEmpty) {
+          throw Exception(
+            'No expense categories for ${role.displayName}. Check your categories or budget wizard setup.',
+          );
+        }
+        final budget = Budget(
+          id: uuid.v4(),
+          name: '${role.displayName} · $periodLabel',
+          accountId: accountId,
+          limitAmount: amount,
+          startDate: startDate,
+          endDate: endDate,
+          roleType: role,
+          createdAt: now,
+          updatedAt: now,
+        );
+        await _db.insertBudget(budget);
+        await _db.setBudgetCategories(budget.id, categoryIds);
+      }
+
+      await insertRoleSlice(
+        role: BudgetRoleType.needs,
+        amount: needs,
+        categoryIds: needsIds,
+      );
+      await insertRoleSlice(
+        role: BudgetRoleType.wants,
+        amount: wants,
+        categoryIds: wantsIds,
+      );
+      await insertRoleSlice(
+        role: BudgetRoleType.goals,
+        amount: goals,
+        categoryIds: savingsIds,
+      );
+
+      await loadBudgets();
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+      return false;
+    }
   }
 
   /// Create multiple budgets based on the 50/30/20 rule

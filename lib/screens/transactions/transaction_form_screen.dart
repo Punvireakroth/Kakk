@@ -9,9 +9,11 @@ import '../../models/category.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/account_provider.dart';
+import '../../providers/budget_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/exchange_rate_service.dart';
 import '../../utils/currency_formatter.dart';
+import '../roles/role_assignment_sheet.dart';
 
 class TransactionFormScreen extends ConsumerStatefulWidget {
   final Transaction? transaction;
@@ -1144,6 +1146,50 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen>
     if (_isExpense) {
       final shouldContinue = await _checkBudgetLimit(finalAmount);
       if (!shouldContinue) return;
+    }
+
+    // New income: role split sheet before DB save (dismiss = cancel save)
+    if (widget.transaction == null && !_isExpense) {
+      final rolePeriodStart = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        1,
+      ).millisecondsSinceEpoch;
+      final rolePeriodEnd = DateTime(
+        _selectedDate.year,
+        _selectedDate.month + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ).millisecondsSinceEpoch;
+      final hasTrio = await ref
+          .read(budgetProvider.notifier)
+          .hasActiveRoleBudgetTrioForPeriod(
+        periodStartMs: rolePeriodStart,
+        periodEndMs: rolePeriodEnd,
+      );
+      if (!hasTrio) {
+        if (!mounted) return;
+        final outcome = await showModalBottomSheet<RoleAssignmentOutcome?>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (ctx) => RoleAssignmentSheet(
+            incomeAmount: finalAmount,
+            currencyCode: _accountCurrency,
+            accountId: _selectedAccountId,
+            periodStartMs: rolePeriodStart,
+            periodEndMs: rolePeriodEnd,
+          ),
+        );
+        if (!mounted) return;
+        if (outcome == null) return;
+      }
     }
 
     setState(() => _isLoading = true);
