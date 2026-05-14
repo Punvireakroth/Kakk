@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/database_service.dart';
 import 'services/seeding_service.dart';
@@ -10,6 +11,29 @@ import 'screens/transactions/transactions_screen.dart';
 import 'screens/budgets/budgets_screen.dart';
 import 'providers/settings_provider.dart';
 import 'l10n/app_localizations.dart';
+
+/// Fredoka with Material 3
+TextTheme _fredokaTextTheme(TextTheme source) {
+  TextStyle f(TextStyle? style, FontWeight weight) =>
+      GoogleFonts.fredoka(textStyle: style, fontWeight: weight);
+  return source.copyWith(
+    displayLarge: f(source.displayLarge, FontWeight.w600),
+    displayMedium: f(source.displayMedium, FontWeight.w600),
+    displaySmall: f(source.displaySmall, FontWeight.w600),
+    headlineLarge: f(source.headlineLarge, FontWeight.w600),
+    headlineMedium: f(source.headlineMedium, FontWeight.w600),
+    headlineSmall: f(source.headlineSmall, FontWeight.w600),
+    titleLarge: f(source.titleLarge, FontWeight.w600),
+    titleMedium: f(source.titleMedium, FontWeight.w600),
+    titleSmall: f(source.titleSmall, FontWeight.w500),
+    bodyLarge: f(source.bodyLarge, FontWeight.w500),
+    bodyMedium: f(source.bodyMedium, FontWeight.w500),
+    bodySmall: f(source.bodySmall, FontWeight.w500),
+    labelLarge: f(source.labelLarge, FontWeight.w600),
+    labelMedium: f(source.labelMedium, FontWeight.w500),
+    labelSmall: f(source.labelSmall, FontWeight.w500),
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,7 +94,7 @@ class CashChewApp extends ConsumerWidget {
       accentColor,
     ).withSaturation(0.3).withLightness(0.92).toColor();
 
-    return ThemeData(
+    final base = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: accentColor,
@@ -107,6 +131,7 @@ class CashChewApp extends ConsumerWidget {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          textStyle: GoogleFonts.fredoka(fontWeight: FontWeight.w600),
           backgroundColor: accentColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -125,15 +150,23 @@ class CashChewApp extends ConsumerWidget {
         ),
       ),
     );
+    return base.copyWith(
+      textTheme: _fredokaTextTheme(base.textTheme),
+      primaryTextTheme: _fredokaTextTheme(base.primaryTextTheme),
+    );
   }
 
   ThemeData _buildDarkTheme(Color accentColor) {
-    return ThemeData(
+    final base = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: accentColor,
         brightness: Brightness.dark,
       ),
+    );
+    return base.copyWith(
+      textTheme: _fredokaTextTheme(base.textTheme),
+      primaryTextTheme: _fredokaTextTheme(base.primaryTextTheme),
     );
   }
 }
