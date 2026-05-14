@@ -11,6 +11,7 @@ import 'screens/transactions/transactions_screen.dart';
 import 'screens/budgets/budgets_screen.dart';
 import 'providers/settings_provider.dart';
 import 'l10n/app_localizations.dart';
+import 'utils/app_text_scale.dart';
 
 /// Fredoka with Material 3
 TextTheme _fredokaTextTheme(TextTheme source) {
@@ -81,6 +82,17 @@ class CashChewApp extends ConsumerWidget {
       locale: settings.locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      /// Scales every [Text] / material text that respects [MediaQuery.textScaler]
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: AppCompoundedTextScaler(mq.textScaler, kAppTextScaleFactor),
+          ),
+          child: child,
+        );
+      },
       home: showOnboarding ? const OnboardingScreen() : const MainNavigation(),
       routes: {
         '/home': (context) => const MainNavigation(),
