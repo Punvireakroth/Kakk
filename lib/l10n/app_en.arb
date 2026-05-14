@@ -251,5 +251,14 @@
   "geminiApiKeyHint": "Paste a key from Google AI Studio",
   "geminiApiKeySaved": "API key saved",
   "geminiApiKeyRemoved": "API key removed",
-  "removeApiKey": "Remove key"
+  "geminiApiKeyEmpty": "Enter an API key before saving.",
+  "geminiApiKeySaveFailed": "Could not save the API key on this device. Check permissions or try again.",
+  "removeApiKey": "Remove key",
+
+  "roleAssignmentFetchingSuggestions": "Getting suggestions…",
+  "roleAiSuggestedSplitTitle": "Suggested split",
+  "roleAiSuggestionFooterFromHistory": "Suggested by AI based on your last 3 months.",
+  "roleAiSuggestionFooterDefaultSplit": "Default 50/30/20 split (no history yet).",
+  "roleAcceptAndSave": "Accept & Save",
+  "roleAdjustManually": "Adjust"
 }

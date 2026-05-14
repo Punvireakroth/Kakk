@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -16,6 +18,9 @@ class SeedingService {
 
   /// Tag stored in [Transaction.notes] so demo rows can be removed safely.
   static const String demoTransactionMarker = '[[cashchew-demo-seed]]';
+
+  /// Tag stored in [Transaction.notes] so AI-history demo rows can be removed safely.
+  static const String aiRoleHistorySeedMarker = '[[cashchew-ai-role-history-seed]]';
 
   /// Budget ids for [seedDemoFinancialData] start with this prefix (names stay realistic).
   static const String seedBudgetIdPrefix = 'ccseed_b_';
@@ -813,6 +818,184 @@ class SeedingService {
 
     await _recalculateAccountBalance(accountId);
     print('Demo financial seed complete (account $accountId)');
+  }
+
+  Future<bool> hasAiRoleExpenseHistorySeed() async {
+    final db = await _db.database;
+    final rows = await db.rawQuery(
+      'SELECT COUNT(*) AS c FROM transactions WHERE notes LIKE ?',
+      ['%$aiRoleHistorySeedMarker%'],
+    );
+    final n = rows.first['c'];
+    return (n is int && n > 0) || (n is num && n > 0);
+  }
+
+  /// Deletes transactions tagged with [aiRoleHistorySeedMarker] and recomputes balances.
+  Future<void> removeAiRoleExpenseHistorySeed() async {
+    final db = await _db.database;
+    await db.delete(
+      'transactions',
+      where: 'notes LIKE ?',
+      whereArgs: ['%$aiRoleHistorySeedMarker%'],
+    );
+    for (final a in await _db.getAccounts()) {
+      await _recalculateAccountBalance(a.id);
+    }
+    print('AI role expense history seed removed');
+  }
+
+  /// Expense-only history across the **last three calendar months** (same window as
+  /// [SpendingSummaryService.build]), relative to [clock] or `DateTime.now()`.
+  ///
+  /// Uses default category → Needs/Wants/Goals mapping so Gemini sees realistic
+  /// rolling averages. Does **not** create budgets or income rows.
+  ///
+  /// Cleanup: [removeAiRoleExpenseHistorySeed].
+  Future<void> seedAiRoleExpenseHistory({
+    bool replaceExisting = false,
+    DateTime? clock,
+  }) async {
+    await seedDefaultData();
+
+    if (replaceExisting) {
+      await removeAiRoleExpenseHistorySeed();
+    } else if (await hasAiRoleExpenseHistorySeed()) {
+      throw StateError(
+        'AI role expense history seed already exists. '
+        'Call with replaceExisting: true to refresh.',
+      );
+    }
+
+    final now = clock ?? DateTime.now();
+    final categories = await _db.getCategories();
+    final byName = {for (final c in categories) c.name: c.id};
+    const requiredExpense = [
+      'Housing',
+      'Bills & Utilities',
+      'Food & Dining',
+      'Transportation',
+      'Healthcare',
+      'Shopping',
+      'Entertainment',
+      'Travel',
+      'Personal Care',
+      'Fitness & Sports',
+      'Savings Transfer',
+    ];
+    for (final name in requiredExpense) {
+      if (!byName.containsKey(name)) {
+        throw StateError(
+          'Missing category "$name". Run default seed first.',
+        );
+      }
+    }
+
+    var accounts = await _db.getAccounts();
+    final tsNow = DateTime.now().millisecondsSinceEpoch;
+    late final String accountId;
+    if (accounts.isEmpty) {
+      accountId = _uuid.v4();
+      await _db.insertAccount(
+        Account(
+          id: accountId,
+          name: 'Cash',
+          balance: 0,
+          currency: 'USD',
+          createdAt: tsNow,
+          updatedAt: tsNow,
+        ),
+      );
+    } else {
+      accountId = accounts.first.id;
+    }
+
+    final periodStart = DateTime(now.year, now.month - 2, 1);
+    final windowEnd = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    Future<void> expense(
+      String title,
+      String categoryName,
+      double amount,
+      DateTime when,
+    ) async {
+      if (when.isBefore(periodStart)) return;
+      if (when.isAfter(windowEnd)) return;
+      await _db.insertTransaction(
+        app_models.Transaction(
+          id: _uuid.v4(),
+          accountId: accountId,
+          categoryId: byName[categoryName]!,
+          amount: amount,
+          title: title,
+          notes: aiRoleHistorySeedMarker,
+          date: when.millisecondsSinceEpoch,
+          createdAt: tsNow,
+          updatedAt: tsNow,
+        ),
+      );
+    }
+
+    for (var mi = 0; mi < 3; mi++) {
+      final monthBase =
+          DateTime(periodStart.year, periodStart.month + mi, 1);
+      if (monthBase.year > now.year ||
+          (monthBase.year == now.year && monthBase.month > now.month)) {
+        break;
+      }
+
+      final lastDom = (monthBase.year == now.year && monthBase.month == now.month)
+          ? now.day
+          : DateTime(monthBase.year, monthBase.month + 1, 0).day;
+
+      Future<void> ex(int dom, String cat, double amt, String title) async {
+        final d = math.min(math.max(dom, 1), lastDom);
+        await expense(title, cat, amt, DateTime(monthBase.year, monthBase.month, d));
+      }
+
+      final bump = mi * 18.0;
+
+      await ex(2, 'Housing', 1215 + bump, 'Rent / mortgage');
+      await ex(4, 'Bills & Utilities', 215 + mi * 8.0, 'Utilities bundle');
+      await ex(6, 'Food & Dining', 88 + mi * 5.0, 'Groceries');
+      await ex(8, 'Transportation', 62 + mi * 6.0, 'Transit pass top-up');
+      await ex(10, 'Healthcare', 42 + mi * 11.0, 'Pharmacy');
+      await ex(11, 'Food & Dining', 112 + mi * 4.0, 'Weekend groceries');
+      await ex(13, 'Shopping', 96 + mi * 17.0, 'General merchandise');
+      await ex(15, 'Entertainment', 38 + mi * 12.0, 'Streaming & outings');
+      await ex(
+        17,
+        'Travel',
+        mi.isEven ? 140 + mi * 25.0 : 85 + mi * 10.0,
+        mi.isEven ? 'Regional trip' : 'Local getaway',
+      );
+      await ex(19, 'Personal Care', 52 + mi * 9.0, 'Personal care');
+      await ex(21, 'Fitness & Sports', 68 + mi * 7.0, 'Gym & sports');
+      await ex(23, 'Savings Transfer', 420 + mi * 35.0, 'Scheduled savings');
+      await ex(24, 'Bills & Utilities', 36 + mi * 3.0, 'Mobile phone');
+      await ex(26, 'Food & Dining', 74 + mi * 6.0, 'Dining out');
+      await ex(27, 'Shopping', 58 + mi * 5.0, 'Online order');
+      await ex(28, 'Entertainment', 24 + mi * 4.0, 'Movies');
+      await ex(
+        lastDom >= 29 ? 29 : lastDom,
+        'Transportation',
+        48 + mi * 5.0,
+        'Fuel',
+      );
+    }
+
+    await _recalculateAccountBalance(accountId);
+    print(
+      'AI role expense history seeded (${DateFormat.yMMMd().format(periodStart)} '
+      '– ${DateFormat.yMMMd().format(windowEnd)}, account $accountId)',
+    );
   }
 
   Future<void> _recalculateAccountBalance(String accountId) async {

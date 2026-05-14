@@ -463,5 +463,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get geminiApiKeyRemoved => 'API key removed';
 
   @override
+  String get geminiApiKeyEmpty => 'Enter an API key before saving.';
+
+  @override
+  String get geminiApiKeySaveFailed =>
+      'Could not save the API key on this device. Check permissions or try again.';
+
+  @override
   String get removeApiKey => 'Remove key';
+
+  @override
+  String get roleAssignmentFetchingSuggestions => 'Getting suggestions…';
+
+  @override
+  String get roleAiSuggestedSplitTitle => 'Suggested split';
+
+  @override
+  String get roleAiSuggestionFooterFromHistory =>
+      'Suggested by AI based on your last 3 months.';
+
+  @override
+  String get roleAiSuggestionFooterDefaultSplit =>
+      'Default 50/30/20 split (no history yet).';
+
+  @override
+  String get roleAcceptAndSave => 'Accept & Save';
+
+  @override
+  String get roleAdjustManually => 'Adjust';
 }

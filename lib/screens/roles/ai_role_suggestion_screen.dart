@@ -2,42 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../models/ai_role_suggestion.dart';
 import '../../providers/budget_provider.dart';
 import '../../utils/budget_role_type.dart';
 import '../../utils/currency_formatter.dart';
+import 'role_assignment_screen.dart';
 
-/// Full-screen editor: split [incomeAmount] across Needs, Wants, and Goals (50/30/20 default).
-class RoleAssignmentScreen extends ConsumerStatefulWidget {
+/// Full-screen AI proposal for Needs / Wants / Goals with editable amounts.
+class AiRoleSuggestionScreen extends ConsumerStatefulWidget {
+  final AiRoleSuggestion suggestion;
   final double incomeAmount;
   final String currencyCode;
   final String? accountId;
   final int periodStartMs;
   final int periodEndMs;
 
-  /// When all three are non-null (e.g. after **Adjust** from the AI suggestion flow),
-  /// fields open with these values instead of 50/30/20.
-  final double? initialNeedsAmount;
-  final double? initialWantsAmount;
-  final double? initialGoalsAmount;
-
-  const RoleAssignmentScreen({
+  const AiRoleSuggestionScreen({
     super.key,
+    required this.suggestion,
     required this.incomeAmount,
     required this.currencyCode,
     required this.accountId,
     required this.periodStartMs,
     required this.periodEndMs,
-    this.initialNeedsAmount,
-    this.initialWantsAmount,
-    this.initialGoalsAmount,
   });
 
   @override
-  ConsumerState<RoleAssignmentScreen> createState() =>
-      _RoleAssignmentScreenState();
+  ConsumerState<AiRoleSuggestionScreen> createState() =>
+      _AiRoleSuggestionScreenState();
 }
 
-class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
+class _AiRoleSuggestionScreenState extends ConsumerState<AiRoleSuggestionScreen> {
   late final TextEditingController _needsController;
   late final TextEditingController _wantsController;
   late final TextEditingController _goalsController;
@@ -45,21 +41,13 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
   @override
   void initState() {
     super.initState();
-    final inc = widget.incomeAmount;
-    final decimals = CurrencyFormatter.getDecimalDigits(widget.currencyCode);
+    final decimals =
+        CurrencyFormatter.getDecimalDigits(widget.currencyCode);
     String fmt(double v) => v.toStringAsFixed(decimals);
-    final hasPreset = widget.initialNeedsAmount != null &&
-        widget.initialWantsAmount != null &&
-        widget.initialGoalsAmount != null;
-    _needsController = TextEditingController(
-      text: hasPreset ? fmt(widget.initialNeedsAmount!) : fmt(inc * 0.50),
-    );
-    _wantsController = TextEditingController(
-      text: hasPreset ? fmt(widget.initialWantsAmount!) : fmt(inc * 0.30),
-    );
-    _goalsController = TextEditingController(
-      text: hasPreset ? fmt(widget.initialGoalsAmount!) : fmt(inc * 0.20),
-    );
+    final s = widget.suggestion;
+    _needsController = TextEditingController(text: fmt(s.needsAmount));
+    _wantsController = TextEditingController(text: fmt(s.wantsAmount));
+    _goalsController = TextEditingController(text: fmt(s.goalsAmount));
     _needsController.addListener(() => setState(() {}));
     _wantsController.addListener(() => setState(() {}));
     _goalsController.addListener(() => setState(() {}));
@@ -73,6 +61,11 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
     super.dispose();
   }
 
+  double _stepForCurrency() =>
+      CurrencyFormatter.getDecimalDigits(widget.currencyCode) == 0
+          ? 1.0
+          : 0.01;
+
   double _parse(String raw) =>
       double.tryParse(raw.replaceAll(',', '').trim()) ?? 0.0;
 
@@ -81,12 +74,25 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
   double get _goals => _parse(_goalsController.text);
 
   double get _assigned => _needs + _wants + _goals;
-
   double get _remaining => widget.incomeAmount - _assigned;
-
   bool get _sumsMatch => _remaining.abs() < 0.015;
 
-  Future<void> _onSave() async {
+  String _fmtDelta(double v) {
+    final d = CurrencyFormatter.getDecimalDigits(widget.currencyCode);
+    return v.toStringAsFixed(d);
+  }
+
+  void _bump(TextEditingController c, double delta) {
+    final decimals =
+        CurrencyFormatter.getDecimalDigits(widget.currencyCode);
+    final cur = _parse(c.text);
+    final next = (cur + delta).clamp(0.0, double.infinity);
+    c.text = next.toStringAsFixed(decimals);
+    c.selection =
+        TextSelection.collapsed(offset: c.text.length);
+  }
+
+  Future<void> _onAcceptSave() async {
     if (!_sumsMatch) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -128,22 +134,45 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
         ),
       );
     } else {
-      final err = ref.read(budgetProvider).error ?? 'Could not save role budgets';
+      final err =
+          ref.read(budgetProvider).error ?? 'Could not save role budgets';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(err), backgroundColor: Colors.red),
       );
     }
   }
 
+  void _onAdjust() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute<bool>(
+        builder: (_) => RoleAssignmentScreen(
+          incomeAmount: widget.incomeAmount,
+          currencyCode: widget.currencyCode,
+          accountId: widget.accountId,
+          periodStartMs: widget.periodStartMs,
+          periodEndMs: widget.periodEndMs,
+          initialNeedsAmount: _needs,
+          initialWantsAmount: _wants,
+          initialGoalsAmount: _goals,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final symbol = CurrencyFormatter.getCurrencySymbol(widget.currencyCode);
+    final l10n = AppLocalizations.of(context)!;
+    final symbol =
+        CurrencyFormatter.getCurrencySymbol(widget.currencyCode);
     final budgetLoading = ref.watch(budgetProvider).isLoading;
+    final s = widget.suggestion;
+    final step = _stepForCurrency();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Split income'),
+        title: Text(l10n.roleAiSuggestedSplitTitle),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -188,8 +217,12 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        _sumsMatch ? Icons.check_circle_outline : Icons.info_outline,
-                        color: _sumsMatch ? Colors.green.shade700 : Colors.orange.shade800,
+                        _sumsMatch
+                            ? Icons.check_circle_outline
+                            : Icons.info_outline,
+                        color: _sumsMatch
+                            ? Colors.green.shade700
+                            : Colors.orange.shade800,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -197,8 +230,8 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
                           _sumsMatch
                               ? 'Adds up.'
                               : _remaining > 0
-                                  ? '$symbol${_remaining.toStringAsFixed(2)} left'
-                                  : '$symbol${(-_remaining).toStringAsFixed(2)} over',
+                                  ? '$symbol${_fmtDelta(_remaining)} left'
+                                  : '$symbol${_fmtDelta(-_remaining)} over',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: _sumsMatch
@@ -211,31 +244,52 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _RoleRow(
+                _AiRoleRow(
                   label: BudgetRoleType.needs.displayName,
                   color: BudgetRoleType.needs.color,
+                  reason: s.needsReason,
                   controller: _needsController,
                   totalIncome: widget.incomeAmount,
                   assigned: _needs,
                   currencyCode: widget.currencyCode,
+                  step: step,
+                  onDecrement: () => _bump(_needsController, -step),
+                  onIncrement: () => _bump(_needsController, step),
                 ),
                 const SizedBox(height: 16),
-                _RoleRow(
+                _AiRoleRow(
                   label: BudgetRoleType.wants.displayName,
                   color: BudgetRoleType.wants.color,
+                  reason: s.wantsReason,
                   controller: _wantsController,
                   totalIncome: widget.incomeAmount,
                   assigned: _wants,
                   currencyCode: widget.currencyCode,
+                  step: step,
+                  onDecrement: () => _bump(_wantsController, -step),
+                  onIncrement: () => _bump(_wantsController, step),
                 ),
                 const SizedBox(height: 16),
-                _RoleRow(
+                _AiRoleRow(
                   label: BudgetRoleType.goals.displayName,
                   color: BudgetRoleType.goals.color,
+                  reason: s.goalsReason,
                   controller: _goalsController,
                   totalIncome: widget.incomeAmount,
                   assigned: _goals,
                   currencyCode: widget.currencyCode,
+                  step: step,
+                  onDecrement: () => _bump(_goalsController, -step),
+                  onIncrement: () => _bump(_goalsController, step),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  s.isFallback
+                      ? l10n.roleAiSuggestionFooterDefaultSplit
+                      : l10n.roleAiSuggestionFooterFromHistory,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -243,18 +297,31 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: budgetLoading ? null : _onSave,
-                  child: budgetLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save'),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: budgetLoading ? null : _onAcceptSave,
+                      child: budgetLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.roleAcceptAndSave),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: budgetLoading ? null : _onAdjust,
+                      child: Text(l10n.roleAdjustManually),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -264,21 +331,29 @@ class _RoleAssignmentScreenState extends ConsumerState<RoleAssignmentScreen> {
   }
 }
 
-class _RoleRow extends StatelessWidget {
+class _AiRoleRow extends StatelessWidget {
   final String label;
   final Color color;
+  final String reason;
   final TextEditingController controller;
   final double totalIncome;
   final double assigned;
   final String currencyCode;
+  final double step;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
 
-  const _RoleRow({
+  const _AiRoleRow({
     required this.label,
     required this.color,
+    required this.reason,
     required this.controller,
     required this.totalIncome,
     required this.assigned,
     required this.currencyCode,
+    required this.step,
+    required this.onDecrement,
+    required this.onIncrement,
   });
 
   @override
@@ -309,6 +384,13 @@ class _RoleRow extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 6),
+        Text(
+          reason,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
@@ -320,19 +402,41 @@ class _RoleRow extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconButton.filledTonal(
+              onPressed: onDecrement,
+              icon: const Icon(Icons.remove),
+              tooltip: step >= 1 ? '-${step.toInt()}' : '-$step',
+            ),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d*\.?\d{0,2}'),
+                  ),
+                ],
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  prefixText:
+                      '${CurrencyFormatter.getCurrencySymbol(currencyCode)} ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                ),
+              ),
+            ),
+            IconButton.filledTonal(
+              onPressed: onIncrement,
+              icon: const Icon(Icons.add),
+              tooltip: step >= 1 ? '+${step.toInt()}' : '+$step',
+            ),
           ],
-          decoration: InputDecoration(
-            labelText: 'Amount',
-            prefixText:
-                '${CurrencyFormatter.getCurrencySymbol(currencyCode)} ',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
-          ),
         ),
       ],
     );

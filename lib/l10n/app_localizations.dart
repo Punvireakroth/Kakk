@@ -896,11 +896,59 @@ abstract class AppLocalizations {
   /// **'API key removed'**
   String get geminiApiKeyRemoved;
 
+  /// No description provided for @geminiApiKeyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an API key before saving.'**
+  String get geminiApiKeyEmpty;
+
+  /// No description provided for @geminiApiKeySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the API key on this device. Check permissions or try again.'**
+  String get geminiApiKeySaveFailed;
+
   /// No description provided for @removeApiKey.
   ///
   /// In en, this message translates to:
   /// **'Remove key'**
   String get removeApiKey;
+
+  /// No description provided for @roleAssignmentFetchingSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting suggestions…'**
+  String get roleAssignmentFetchingSuggestions;
+
+  /// No description provided for @roleAiSuggestedSplitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested split'**
+  String get roleAiSuggestedSplitTitle;
+
+  /// No description provided for @roleAiSuggestionFooterFromHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested by AI based on your last 3 months.'**
+  String get roleAiSuggestionFooterFromHistory;
+
+  /// No description provided for @roleAiSuggestionFooterDefaultSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Default 50/30/20 split (no history yet).'**
+  String get roleAiSuggestionFooterDefaultSplit;
+
+  /// No description provided for @roleAcceptAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept & Save'**
+  String get roleAcceptAndSave;
+
+  /// No description provided for @roleAdjustManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust'**
+  String get roleAdjustManually;
 }
 
 class _AppLocalizationsDelegate

@@ -452,5 +452,32 @@ class AppLocalizationsKm extends AppLocalizations {
   String get geminiApiKeyRemoved => 'បានលុបសោ';
 
   @override
+  String get geminiApiKeyEmpty => 'បញ្ចូលសោ API មុនពេលរក្សាទុក។';
+
+  @override
+  String get geminiApiKeySaveFailed =>
+      'មិនអាចរក្សាទុកសោ API លើឧបករណ៍នេះបានទេ។ ពិនិត្យសិទ្ធិ ឬព្យាយាមម្តងទៀត។';
+
+  @override
   String get removeApiKey => 'លុបសោ';
+
+  @override
+  String get roleAssignmentFetchingSuggestions => 'កំពុងយកការណែនាំ…';
+
+  @override
+  String get roleAiSuggestedSplitTitle => 'ការបែងចែកដែលបានស្នើ';
+
+  @override
+  String get roleAiSuggestionFooterFromHistory =>
+      'បានស្នើដោយ AI ផ្អែកលើ ៣ ខែចុងក្រោយរបស់អ្នក។';
+
+  @override
+  String get roleAiSuggestionFooterDefaultSplit =>
+      'បែងចែក ៥០/៣០/២០ លំនាំដើម (មិនទាន់មានប្រវត្តិ)។';
+
+  @override
+  String get roleAcceptAndSave => 'ទទួលយក និងរក្សាទុក';
+
+  @override
+  String get roleAdjustManually => 'កែតម្រូវ';
 }

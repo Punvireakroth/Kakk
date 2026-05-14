@@ -361,7 +361,12 @@ class _AiAssistantSectionState extends State<_AiAssistantSection> {
   }
 
   Future<void> _reloadKeyFlag() async {
-    final has = await AiRoleGeminiKeyStorage.hasApiKey();
+    var has = false;
+    try {
+      has = await AiRoleGeminiKeyStorage.hasApiKey();
+    } catch (e, st) {
+      debugPrint('AiRoleGeminiKeyStorage.hasApiKey failed: $e\n$st');
+    }
     if (!mounted) return;
     setState(() {
       _hasStoredKey = has;
@@ -377,8 +382,28 @@ class _AiAssistantSectionState extends State<_AiAssistantSection> {
 
   Future<void> _saveKey() async {
     final trimmed = _apiKeyController.text.trim();
-    if (trimmed.isEmpty) return;
-    await AiRoleGeminiKeyStorage.writeApiKey(trimmed);
+    if (trimmed.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.l10n.geminiApiKeyEmpty)),
+      );
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      await AiRoleGeminiKeyStorage.writeApiKey(trimmed);
+    } catch (e, st) {
+      debugPrint('AiRoleGeminiKeyStorage.writeApiKey failed: $e\n$st');
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.geminiApiKeySaveFailed),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
     _apiKeyController.clear();
     await _reloadKeyFlag();
     if (!mounted) return;
@@ -388,7 +413,21 @@ class _AiAssistantSectionState extends State<_AiAssistantSection> {
   }
 
   Future<void> _removeKey() async {
-    await AiRoleGeminiKeyStorage.writeApiKey(null);
+    setState(() => _loading = true);
+    try {
+      await AiRoleGeminiKeyStorage.writeApiKey(null);
+    } catch (e, st) {
+      debugPrint('AiRoleGeminiKeyStorage.writeApiKey(remove) failed: $e\n$st');
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.geminiApiKeySaveFailed),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
     await _reloadKeyFlag();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -459,7 +498,7 @@ class _AiAssistantSectionState extends State<_AiAssistantSection> {
               obscureText: true,
               autocorrect: false,
               enableSuggestions: false,
-              keyboardType: TextInputType.visiblePassword,
+              keyboardType: TextInputType.text,
               decoration: InputDecoration(
                 labelText: widget.l10n.geminiApiKeyLabel,
                 hintText: widget.l10n.geminiApiKeyHint,
@@ -472,12 +511,12 @@ class _AiAssistantSectionState extends State<_AiAssistantSection> {
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: _loading ? null : _saveKey,
+                  onPressed: _loading ? null : () => _saveKey(),
                   child: Text(widget.l10n.save),
                 ),
                 if (_hasStoredKey)
                   TextButton(
-                    onPressed: _loading ? null : _removeKey,
+                    onPressed: _loading ? null : () => _removeKey(),
                     child: Text(widget.l10n.removeApiKey),
                   ),
               ],

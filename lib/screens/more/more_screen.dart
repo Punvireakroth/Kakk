@@ -23,6 +23,7 @@ class MoreScreen extends ConsumerStatefulWidget {
 class _MoreScreenState extends ConsumerState<MoreScreen> {
   bool _demoSeedBusy = false;
   bool _rolloverDemoBusy = false;
+  bool _aiHistorySeedBusy = false;
 
   @override
   void initState() {
@@ -180,9 +181,26 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               'Seed sample data for demo',
               style: TextStyle(fontSize: 12),
             ),
-            enabled: !_demoSeedBusy && !_rolloverDemoBusy,
+            enabled: !_demoSeedBusy && !_rolloverDemoBusy && !_aiHistorySeedBusy,
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _onSeedDemoFinancialData,
+          ),
+          ListTile(
+            leading: _aiHistorySeedBusy
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_graph, color: Colors.deepOrange),
+            title: const Text('Seed AI role expense history'),
+            subtitle: const Text(
+              '~3 months of categorized expenses for richer Gemini prompts',
+              style: TextStyle(fontSize: 12),
+            ),
+            enabled: !_demoSeedBusy && !_rolloverDemoBusy && !_aiHistorySeedBusy,
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: _onSeedAiRoleExpenseHistory,
           ),
           ListTile(
             leading: _rolloverDemoBusy
@@ -197,7 +215,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               'Last month’s Needs/Wants/Goals with leftover — open Home to test rollover',
               style: TextStyle(fontSize: 12),
             ),
-            enabled: !_demoSeedBusy && !_rolloverDemoBusy,
+            enabled: !_demoSeedBusy && !_rolloverDemoBusy && !_aiHistorySeedBusy,
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _onSeedRolloverDemo,
           ),
@@ -319,6 +337,63 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       );
     } finally {
       if (mounted) setState(() => _rolloverDemoBusy = false);
+    }
+  }
+
+  Future<void> _onSeedAiRoleExpenseHistory() async {
+    final db = DatabaseService();
+    final seeding = SeedingService(db);
+    var replace = false;
+    if (await seeding.hasAiRoleExpenseHistorySeed() && mounted) {
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Replace AI history seed?'),
+          content: const Text(
+            'Synthetic expense rows for the AI assistant are already in the '
+            'database. Replace them with a fresh 3‑month window from today?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Replace'),
+            ),
+          ],
+        ),
+      );
+      if (choice != true || !mounted) return;
+      replace = true;
+    }
+
+    setState(() => _aiHistorySeedBusy = true);
+    try {
+      await seeding.seedAiRoleExpenseHistory(replaceExisting: replace);
+      ref.invalidate(accountProvider);
+      ref.invalidate(transactionProvider);
+      ref.invalidate(categoryProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'AI expense history seeded — add income → Split it for Gemini context',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('AI history seed failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _aiHistorySeedBusy = false);
     }
   }
 

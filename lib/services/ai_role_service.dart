@@ -1,27 +1,66 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/ai_role_suggestion.dart';
 import '../models/spending_summary.dart';
 import '../utils/budget_rule_categories.dart';
 
-/// Stores the Gemini API key in encrypted platform storage only.
+/// Stores the Gemini API key in secure storage when the OS allows it.
+///
+/// If Keychain / Keystore write fails (simulators, tight policies, etc.), the
+/// same key is stored via [SharedPreferences] so the feature keeps working.
+/// Prefer secure storage when available.
 class AiRoleGeminiKeyStorage {
   AiRoleGeminiKeyStorage._();
 
-  static const FlutterSecureStorage _storage = FlutterSecureStorage();
+  /// Uses plugin defaults (`KeychainAccessibility.unlocked` on Apple platforms).
+  static const FlutterSecureStorage _secure = FlutterSecureStorage();
+
   static const String storageKey = 'chashew_gemini_api_key';
 
-  static Future<String?> readApiKey() => _storage.read(key: storageKey);
+  /// Weak fallback when [_secure] throws on read/write.
+  static const String _prefsFallbackKey = 'chashew_gemini_api_key_prefs_fallback';
+
+  static Future<String?> readApiKey() async {
+    try {
+      final v = await _secure.read(key: storageKey);
+      final t = v?.trim();
+      if (t != null && t.isNotEmpty) return t;
+    } catch (e, st) {
+      debugPrint('AiRoleGeminiKeyStorage secure read: $e\n$st');
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final f = prefs.getString(_prefsFallbackKey)?.trim();
+    return (f != null && f.isNotEmpty) ? f : null;
+  }
 
   static Future<void> writeApiKey(String? value) async {
-    if (value == null || value.trim().isEmpty) {
-      await _storage.delete(key: storageKey);
+    final prefs = await SharedPreferences.getInstance();
+    final trimmed = value?.trim();
+
+    if (trimmed == null || trimmed.isEmpty) {
+      try {
+        await _secure.delete(key: storageKey);
+      } catch (e, st) {
+        debugPrint('AiRoleGeminiKeyStorage secure delete: $e\n$st');
+      }
+      await prefs.remove(_prefsFallbackKey);
       return;
     }
-    await _storage.write(key: storageKey, value: value.trim());
+
+    try {
+      await _secure.write(key: storageKey, value: trimmed);
+      await prefs.remove(_prefsFallbackKey);
+    } catch (e, st) {
+      debugPrint(
+        'AiRoleGeminiKeyStorage secure write failed; using prefs fallback: $e\n$st',
+      );
+      await prefs.setString(_prefsFallbackKey, trimmed);
+    }
   }
 
   static Future<bool> hasApiKey() async {
@@ -56,10 +95,6 @@ class AiRoleService {
 
     final apiKey = await AiRoleGeminiKeyStorage.readApiKey();
     if (apiKey == null || apiKey.trim().isEmpty) {
-      return _fallback503020(income);
-    }
-
-    if (!summary.hasMinimumExpenseHistoryForAi) {
       return _fallback503020(income);
     }
 

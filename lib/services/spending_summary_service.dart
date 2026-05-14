@@ -25,7 +25,7 @@ class SpendingSummaryService {
   /// (same backing store as [transactionProvider]) so the window is complete,
   /// not limited to the provider's paginated page.
   static Future<SpendingSummary> build(
-    Ref ref, {
+    WidgetRef ref, {
     required double incomeAmount,
     String currencyCode = 'USD',
     DateTime? clock,

@@ -251,5 +251,14 @@
   "geminiApiKeyHint": "បិទភ្ជាប់សោពី Google AI Studio",
   "geminiApiKeySaved": "បានរក្សាទុកសោ",
   "geminiApiKeyRemoved": "បានលុបសោ",
-  "removeApiKey": "លុបសោ"
+  "geminiApiKeyEmpty": "បញ្ចូលសោ API មុនពេលរក្សាទុក។",
+  "geminiApiKeySaveFailed": "មិនអាចរក្សាទុកសោ API លើឧបករណ៍នេះបានទេ។ ពិនិត្យសិទ្ធិ ឬព្យាយាមម្តងទៀត។",
+  "removeApiKey": "លុបសោ",
+
+  "roleAssignmentFetchingSuggestions": "កំពុងយកការណែនាំ…",
+  "roleAiSuggestedSplitTitle": "ការបែងចែកដែលបានស្នើ",
+  "roleAiSuggestionFooterFromHistory": "បានស្នើដោយ AI ផ្អែកលើ ៣ ខែចុងក្រោយរបស់អ្នក។",
+  "roleAiSuggestionFooterDefaultSplit": "បែងចែក ៥០/៣០/២០ លំនាំដើម (មិនទាន់មានប្រវត្តិ)។",
+  "roleAcceptAndSave": "ទទួលយក និងរក្សាទុក",
+  "roleAdjustManually": "កែតម្រូវ"
 }
