@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/category.dart';
 import '../models/spending_summary.dart';
+import '../models/transaction.dart';
 import '../providers/category_provider.dart';
 import '../services/database_service.dart';
 import '../utils/budget_role_type.dart';
@@ -79,6 +80,8 @@ class SpendingSummaryService {
       }
     }
 
+    final historyOk = _hasMinimumExpenseHistory(transactions);
+
     return SpendingSummary(
       averageNeeds: totalNeeds / _monthsInWindow,
       averageWants: totalWants / _monthsInWindow,
@@ -87,8 +90,22 @@ class SpendingSummaryService {
       incomeAmount: incomeAmount,
       periodStart: periodStart,
       periodEnd: periodEnd,
+      hasMinimumExpenseHistoryForAi: historyOk,
       currencyCode: currencyCode,
     );
+  }
+
+  /// Expense dates span at least 28 days — proxy for "about one month" of history.
+  static bool _hasMinimumExpenseHistory(List<Transaction> expenseTransactions) {
+    if (expenseTransactions.length < 2) return false;
+    var minMs = expenseTransactions.first.date;
+    var maxMs = minMs;
+    for (final tx in expenseTransactions) {
+      final d = tx.date;
+      if (d < minMs) minMs = d;
+      if (d > maxMs) maxMs = d;
+    }
+    return (maxMs - minMs) >= const Duration(days: 28).inMilliseconds;
   }
 
   static Map<String, BudgetRoleType> _categoryIdToRole(

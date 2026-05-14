@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/ai_role_service.dart';
 import '../../l10n/app_localizations.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -32,6 +33,10 @@ class SettingsScreen extends ConsumerWidget {
           _buildSectionTitle(l10n.preferences),
           const SizedBox(height: 8),
           _LanguageTile(settings: settings, l10n: l10n),
+          const SizedBox(height: 24),
+          _buildSectionTitle(l10n.aiAssistant),
+          const SizedBox(height: 8),
+          _AiAssistantSection(l10n: l10n, accentColor: settings.accentColor),
         ],
       ),
     );
@@ -328,5 +333,158 @@ class _LanguagePickerSheet extends ConsumerWidget {
       default:
         return '🌐';
     }
+  }
+}
+
+class _AiAssistantSection extends StatefulWidget {
+  final AppLocalizations l10n;
+  final Color accentColor;
+
+  const _AiAssistantSection({
+    required this.l10n,
+    required this.accentColor,
+  });
+
+  @override
+  State<_AiAssistantSection> createState() => _AiAssistantSectionState();
+}
+
+class _AiAssistantSectionState extends State<_AiAssistantSection> {
+  final TextEditingController _apiKeyController = TextEditingController();
+  bool _hasStoredKey = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _reloadKeyFlag();
+  }
+
+  Future<void> _reloadKeyFlag() async {
+    final has = await AiRoleGeminiKeyStorage.hasApiKey();
+    if (!mounted) return;
+    setState(() {
+      _hasStoredKey = has;
+      _loading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveKey() async {
+    final trimmed = _apiKeyController.text.trim();
+    if (trimmed.isEmpty) return;
+    await AiRoleGeminiKeyStorage.writeApiKey(trimmed);
+    _apiKeyController.clear();
+    await _reloadKeyFlag();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(widget.l10n.geminiApiKeySaved)),
+    );
+  }
+
+  Future<void> _removeKey() async {
+    await AiRoleGeminiKeyStorage.writeApiKey(null);
+    await _reloadKeyFlag();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(widget.l10n.geminiApiKeyRemoved)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: widget.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.auto_awesome, color: widget.accentColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.l10n.aiAssistant,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.l10n.aiAssistantDescription,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            ),
+            if (_hasStoredKey) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.lock_outline, size: 16, color: widget.accentColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    widget.l10n.geminiApiKeyLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: widget.accentColor,
+                    ),
+                  ),
+                  Text(
+                    ' ········',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _apiKeyController,
+              obscureText: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              keyboardType: TextInputType.visiblePassword,
+              decoration: InputDecoration(
+                labelText: widget.l10n.geminiApiKeyLabel,
+                hintText: widget.l10n.geminiApiKeyHint,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton(
+                  onPressed: _loading ? null : _saveKey,
+                  child: Text(widget.l10n.save),
+                ),
+                if (_hasStoredKey)
+                  TextButton(
+                    onPressed: _loading ? null : _removeKey,
+                    child: Text(widget.l10n.removeApiKey),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

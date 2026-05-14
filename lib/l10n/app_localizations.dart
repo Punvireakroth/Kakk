@@ -1051,6 +1051,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resolve'**
   String get roleLeftoverBannerAction;
+
+  /// No description provided for @aiAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get aiAssistant;
+
+  /// No description provided for @aiAssistantDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Income role suggestions use Google\'s Gemini. Your key is stored encrypted on this device only.'**
+  String get aiAssistantDescription;
+
+  /// No description provided for @geminiApiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API key'**
+  String get geminiApiKeyLabel;
+
+  /// No description provided for @geminiApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a key from Google AI Studio'**
+  String get geminiApiKeyHint;
+
+  /// No description provided for @geminiApiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved'**
+  String get geminiApiKeySaved;
+
+  /// No description provided for @geminiApiKeyRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'API key removed'**
+  String get geminiApiKeyRemoved;
+
+  /// No description provided for @removeApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove key'**
+  String get removeApiKey;
 }
 
 class _AppLocalizationsDelegate

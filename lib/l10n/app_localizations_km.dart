@@ -528,4 +528,26 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get roleLeftoverBannerAction => 'ដោះស្រាយ';
+
+  @override
+  String get aiAssistant => 'ជំនួយការ AI';
+
+  @override
+  String get aiAssistantDescription =>
+      'ការណែនាំតួនាទីចំណូលប្រើ Gemini របស់ Google។ សោររបស់អ្នកត្រូវបានរក្សាទុកបានលេខនៅលើឧបករណ៍នេះប៉ុណ្ណោះ។';
+
+  @override
+  String get geminiApiKeyLabel => 'សោ Gemini API';
+
+  @override
+  String get geminiApiKeyHint => 'បិទភ្ជាប់សោពី Google AI Studio';
+
+  @override
+  String get geminiApiKeySaved => 'បានរក្សាទុកសោ';
+
+  @override
+  String get geminiApiKeyRemoved => 'បានលុបសោ';
+
+  @override
+  String get removeApiKey => 'លុបសោ';
 }

@@ -14,6 +14,7 @@ class SpendingSummary {
     required this.incomeAmount,
     required this.periodStart,
     required this.periodEnd,
+    required this.hasMinimumExpenseHistoryForAi,
     this.currencyCode = 'USD',
   });
 
@@ -34,6 +35,9 @@ class SpendingSummary {
 
   final DateTime periodStart;
   final DateTime periodEnd;
+
+  /// At least ~28 days between earliest and latest expense in the analysis window.
+  final bool hasMinimumExpenseHistoryForAi;
 
   final String currencyCode;
 

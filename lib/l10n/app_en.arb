@@ -280,5 +280,13 @@
       "count": {"type": "int"}
     }
   },
-  "roleLeftoverBannerAction": "Resolve"
+  "roleLeftoverBannerAction": "Resolve",
+
+  "aiAssistant": "AI Assistant",
+  "aiAssistantDescription": "Income role suggestions use Google's Gemini. Your key is stored encrypted on this device only.",
+  "geminiApiKeyLabel": "Gemini API key",
+  "geminiApiKeyHint": "Paste a key from Google AI Studio",
+  "geminiApiKeySaved": "API key saved",
+  "geminiApiKeyRemoved": "API key removed",
+  "removeApiKey": "Remove key"
 }

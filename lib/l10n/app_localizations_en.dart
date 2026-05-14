@@ -540,4 +540,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleLeftoverBannerAction => 'Resolve';
+
+  @override
+  String get aiAssistant => 'AI Assistant';
+
+  @override
+  String get aiAssistantDescription =>
+      'Income role suggestions use Google\'s Gemini. Your key is stored encrypted on this device only.';
+
+  @override
+  String get geminiApiKeyLabel => 'Gemini API key';
+
+  @override
+  String get geminiApiKeyHint => 'Paste a key from Google AI Studio';
+
+  @override
+  String get geminiApiKeySaved => 'API key saved';
+
+  @override
+  String get geminiApiKeyRemoved => 'API key removed';
+
+  @override
+  String get removeApiKey => 'Remove key';
 }
