@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../utils/budget_role_type.dart';
+
 @immutable
 class Budget {
   final String id;
@@ -9,6 +11,8 @@ class Budget {
   final int startDate;
   final int endDate;
   final bool isArchived;
+  /// Set for role-based (Needs / Wants / Goals / …) budgets; null for legacy budgets.
+  final BudgetRoleType? roleType;
   final int createdAt;
   final int updatedAt;
 
@@ -20,6 +24,7 @@ class Budget {
     required this.startDate,
     required this.endDate,
     this.isArchived = false,
+    this.roleType,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -46,6 +51,7 @@ class Budget {
       'start_date': startDate,
       'end_date': endDate,
       'is_archived': isArchived ? 1 : 0,
+      'role_type': roleType?.storageValue,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
@@ -61,6 +67,7 @@ class Budget {
       startDate: map['start_date'] as int,
       endDate: map['end_date'] as int,
       isArchived: (map['is_archived'] as int?) == 1,
+      roleType: budgetRoleTypeFromStorage(map['role_type'] as String?),
       createdAt: map['created_at'] as int,
       updatedAt: map['updated_at'] as int,
     );
@@ -68,6 +75,7 @@ class Budget {
 
   /// Create a copy of Budget with updated fields
   /// Use [clearAccountId] = true to explicitly set accountId to null
+  /// Use [clearRoleType] = true to explicitly set [roleType] to null
   Budget copyWith({
     String? id,
     String? name,
@@ -77,6 +85,8 @@ class Budget {
     int? startDate,
     int? endDate,
     bool? isArchived,
+    BudgetRoleType? roleType,
+    bool clearRoleType = false,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -88,6 +98,7 @@ class Budget {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       isArchived: isArchived ?? this.isArchived,
+      roleType: clearRoleType ? null : (roleType ?? this.roleType),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

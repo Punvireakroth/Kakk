@@ -324,6 +324,7 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
         limitAmount: oldBudget.budget.limitAmount,
         startDate: newStartDate,
         endDate: newEndDate,
+        roleType: oldBudget.budget.roleType,
         createdAt: now,
         updatedAt: now,
       );

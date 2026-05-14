@@ -30,7 +30,7 @@ class DatabaseService {
 
       return await openDatabase(
         path,
-        version: 3,
+        version: 4,
         onCreate: _createDatabase,
         onUpgrade: _onUpgrade,
         onConfigure: _onConfigure,
@@ -83,6 +83,14 @@ class DatabaseService {
       print('Added is_archived column to budgets table');
     }
 
+    if (oldVersion < 4) {
+      // Migration to version 4: role-based budgeting (nullable for existing rows)
+      await db.execute('''
+        ALTER TABLE budgets ADD COLUMN role_type TEXT;
+      ''');
+      print('Added role_type column to budgets table');
+    }
+
     print('Database upgrade complete');
   }
 
@@ -127,6 +135,7 @@ class DatabaseService {
           start_date INTEGER NOT NULL,
           end_date INTEGER NOT NULL,
           is_archived INTEGER NOT NULL DEFAULT 0,
+          role_type TEXT,
           created_at INTEGER NOT NULL,
           updated_at INTEGER NOT NULL
         );
