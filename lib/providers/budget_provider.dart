@@ -448,7 +448,10 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
     );
   }
 
-  /// Create three role-tagged budgets (50/30/20 buckets) from income, using [BudgetRuleCategorizer] categories.
+  /// Create or extend role-tagged budgets (Needs / Wants / Goals) for [startDate]–[endDate].
+  ///
+  /// If a non-archived budget with the same [BudgetRoleType] already overlaps that period,
+  /// its [Budget.limitAmount] is increased by the split amount; otherwise a new slice is inserted.
   Future<bool> createRoleBudgets({
     required String? accountId,
     required double incomeAmount,
@@ -486,7 +489,22 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
         'MMM yyyy',
       ).format(DateTime.fromMillisecondsSinceEpoch(startDate));
 
-      Future<void> insertRoleSlice({
+      var workingBudgets = await _db.getNonArchivedBudgets();
+
+      Budget? overlappingRoleBudget(BudgetRoleType role) {
+        final matches = workingBudgets.where((b) {
+          if (b.roleType != role) return false;
+          return b.startDate <= endDate && b.endDate >= startDate;
+        }).toList();
+        if (matches.isEmpty) return null;
+        for (final b in matches) {
+          if (b.startDate == startDate && b.endDate == endDate) return b;
+        }
+        matches.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        return matches.first;
+      }
+
+      Future<void> upsertRoleSlice({
         required BudgetRoleType role,
         required double amount,
         required List<String> categoryIds,
@@ -496,6 +514,17 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
           throw Exception(
             'No expense categories for ${role.displayName}. Check your categories or budget wizard setup.',
           );
+        }
+        final existing = overlappingRoleBudget(role);
+        if (existing != null) {
+          final updated = existing.copyWith(
+            limitAmount: existing.limitAmount + amount,
+            updatedAt: now,
+          );
+          await _db.updateBudget(updated);
+          final i = workingBudgets.indexWhere((b) => b.id == existing.id);
+          if (i >= 0) workingBudgets[i] = updated;
+          return;
         }
         final budget = Budget(
           id: uuid.v4(),
@@ -510,19 +539,20 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
         );
         await _db.insertBudget(budget);
         await _db.setBudgetCategories(budget.id, categoryIds);
+        workingBudgets.add(budget);
       }
 
-      await insertRoleSlice(
+      await upsertRoleSlice(
         role: BudgetRoleType.needs,
         amount: needs,
         categoryIds: needsIds,
       );
-      await insertRoleSlice(
+      await upsertRoleSlice(
         role: BudgetRoleType.wants,
         amount: wants,
         categoryIds: wantsIds,
       );
-      await insertRoleSlice(
+      await upsertRoleSlice(
         role: BudgetRoleType.goals,
         amount: goals,
         categoryIds: savingsIds,

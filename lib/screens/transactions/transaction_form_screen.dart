@@ -9,7 +9,6 @@ import '../../models/category.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/account_provider.dart';
-import '../../providers/budget_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/exchange_rate_service.dart';
 import '../../utils/currency_formatter.dart';
@@ -1164,32 +1163,24 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen>
         59,
         999,
       ).millisecondsSinceEpoch;
-      final hasTrio = await ref
-          .read(budgetProvider.notifier)
-          .hasActiveRoleBudgetTrioForPeriod(
-        periodStartMs: rolePeriodStart,
-        periodEndMs: rolePeriodEnd,
+      if (!mounted) return;
+      final outcome = await showModalBottomSheet<RoleAssignmentOutcome?>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => RoleAssignmentSheet(
+          incomeAmount: finalAmount,
+          currencyCode: _accountCurrency,
+          accountId: _selectedAccountId,
+          periodStartMs: rolePeriodStart,
+          periodEndMs: rolePeriodEnd,
+        ),
       );
-      if (!hasTrio) {
-        if (!mounted) return;
-        final outcome = await showModalBottomSheet<RoleAssignmentOutcome?>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (ctx) => RoleAssignmentSheet(
-            incomeAmount: finalAmount,
-            currencyCode: _accountCurrency,
-            accountId: _selectedAccountId,
-            periodStartMs: rolePeriodStart,
-            periodEndMs: rolePeriodEnd,
-          ),
-        );
-        if (!mounted) return;
-        if (outcome == null) return;
-      }
+      if (!mounted) return;
+      if (outcome == null) return;
     }
 
     setState(() => _isLoading = true);
