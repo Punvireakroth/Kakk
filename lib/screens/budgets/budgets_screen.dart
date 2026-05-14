@@ -5,7 +5,6 @@ import '../../providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/budget_card.dart';
 import 'budget_form_screen.dart';
-import 'budget_wizard_screen.dart';
 
 class BudgetsScreen extends ConsumerStatefulWidget {
   const BudgetsScreen({super.key});
@@ -37,16 +36,6 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen>
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (context) => const BudgetFormScreen()),
-    );
-    if (result == true) {
-      ref.read(budgetProvider.notifier).loadBudgets();
-    }
-  }
-
-  void _navigateToWizard() async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (context) => const BudgetWizardScreen()),
     );
     if (result == true) {
       ref.read(budgetProvider.notifier).loadBudgets();
@@ -147,13 +136,6 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen>
             color: Colors.black87,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Color(0xFF6B7FD7)),
-            onPressed: _navigateToWizard,
-            tooltip: l10n.quickSetup503020,
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: accentColor,
@@ -261,20 +243,6 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen>
               label: Text(l10n.createBudget),
               style: FilledButton.styleFrom(
                 backgroundColor: accentColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _navigateToWizard,
-              icon: const Icon(Icons.auto_awesome),
-              label: Text(l10n.quickSetup503020),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: accentColor,
-                side: BorderSide(color: accentColor),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,

@@ -512,7 +512,7 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
         if (amount <= 0) return;
         if (categoryIds.isEmpty) {
           throw Exception(
-            'No expense categories for ${role.displayName}. Check your categories or budget wizard setup.',
+            'No expense categories for ${role.displayName}. Add expense categories first.',
           );
         }
         final existing = overlappingRoleBudget(role);
@@ -564,87 +564,6 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
       state = state.copyWith(
         isLoading: false,
         error: e.toString().replaceFirst('Exception: ', ''),
-      );
-      return false;
-    }
-  }
-
-  /// Create multiple budgets based on the 50/30/20 rule
-  Future<bool> createBudgetsFromRule({
-    required String? accountId,
-    required double totalAmount,
-    required int startDate,
-    required int endDate,
-    required List<String> needsCategoryIds,
-    required List<String> wantsCategoryIds,
-    required List<String> savingsCategoryIds,
-  }) async {
-    state = state.copyWith(isLoading: true, error: null);
-
-    try {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final uuid = const Uuid();
-
-      // Calculate amounts based on 50/30/20 rule
-      final needsAmount = totalAmount * 0.50;
-      final wantsAmount = totalAmount * 0.30;
-      final savingsAmount = totalAmount * 0.20;
-
-      // Create Needs budget (50%)
-      if (needsCategoryIds.isNotEmpty) {
-        final needsBudget = Budget(
-          id: uuid.v4(),
-          name: 'Needs',
-          accountId: accountId,
-          limitAmount: needsAmount,
-          startDate: startDate,
-          endDate: endDate,
-          createdAt: now,
-          updatedAt: now,
-        );
-        await _db.insertBudget(needsBudget);
-        await _db.setBudgetCategories(needsBudget.id, needsCategoryIds);
-      }
-
-      // Create Wants budget (30%)
-      if (wantsCategoryIds.isNotEmpty) {
-        final wantsBudget = Budget(
-          id: uuid.v4(),
-          name: 'Wants',
-          accountId: accountId,
-          limitAmount: wantsAmount,
-          startDate: startDate,
-          endDate: endDate,
-          createdAt: now,
-          updatedAt: now,
-        );
-        await _db.insertBudget(wantsBudget);
-        await _db.setBudgetCategories(wantsBudget.id, wantsCategoryIds);
-      }
-
-      // Create Savings budget (20%) - only if categories assigned
-      if (savingsCategoryIds.isNotEmpty) {
-        final savingsBudget = Budget(
-          id: uuid.v4(),
-          name: 'Savings',
-          accountId: accountId,
-          limitAmount: savingsAmount,
-          startDate: startDate,
-          endDate: endDate,
-          createdAt: now,
-          updatedAt: now,
-        );
-        await _db.insertBudget(savingsBudget);
-        await _db.setBudgetCategories(savingsBudget.id, savingsCategoryIds);
-      }
-
-      // Reload budgets to get updated list
-      await loadBudgets();
-      return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to create budgets: ${e.toString()}',
       );
       return false;
     }
