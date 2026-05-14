@@ -460,6 +460,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       // Clear database tables
       final db = DatabaseService();
       final database = await db.database;
+      await database.delete('ai_role_suggestions');
       await database.delete('transactions');
       await database.delete('budgets');
       await database.delete('accounts');
@@ -484,6 +485,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     try {
       final db = DatabaseService();
       final database = await db.database;
+      await database.delete('ai_role_suggestions');
       await database.delete('transactions');
       await database.delete('budgets');
       await database.delete('accounts');

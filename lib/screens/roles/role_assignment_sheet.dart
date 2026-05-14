@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/ai_role_suggestion.dart';
 import '../../services/ai_role_service.dart';
+import '../../services/database_service.dart';
 import '../../services/spending_summary_service.dart';
 import '../../utils/currency_formatter.dart';
 import 'ai_role_suggestion_screen.dart';
@@ -47,6 +48,18 @@ class _RoleAssignmentSheetState extends ConsumerState<RoleAssignmentSheet> {
         currencyCode: widget.currencyCode,
       );
       suggestion = await AiRoleService.suggest(summary);
+      try {
+        await DatabaseService().insertAiSuggestion(
+          incomeAmount: widget.incomeAmount,
+          currencyCode: widget.currencyCode,
+          periodStartMs: widget.periodStartMs,
+          periodEndMs: widget.periodEndMs,
+          accountId: widget.accountId,
+          suggestion: suggestion,
+        );
+      } catch (e) {
+        debugPrint('insertAiSuggestion failed: $e');
+      }
     } catch (_) {
       suggestion = null;
     } finally {

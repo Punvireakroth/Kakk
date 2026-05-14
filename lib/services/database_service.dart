@@ -1,5 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:uuid/uuid.dart';
+import '../models/ai_role_suggestion.dart';
+import '../models/ai_role_suggestion_record.dart';
 import '../models/category.dart';
 import '../models/account.dart';
 import '../models/budget.dart';
@@ -30,7 +33,7 @@ class DatabaseService {
 
       return await openDatabase(
         path,
-        version: 4,
+        version: 5,
         onCreate: _createDatabase,
         onUpgrade: _onUpgrade,
         onConfigure: _onConfigure,
@@ -89,6 +92,31 @@ class DatabaseService {
         ALTER TABLE budgets ADD COLUMN role_type TEXT;
       ''');
       print('Added role_type column to budgets table');
+    }
+
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE ai_role_suggestions (
+          id TEXT PRIMARY KEY,
+          income_amount REAL NOT NULL,
+          currency_code TEXT NOT NULL DEFAULT 'USD',
+          period_start_ms INTEGER NOT NULL,
+          period_end_ms INTEGER NOT NULL,
+          account_id TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+          needs_amount REAL NOT NULL,
+          wants_amount REAL NOT NULL,
+          goals_amount REAL NOT NULL,
+          needs_reason TEXT NOT NULL,
+          wants_reason TEXT NOT NULL,
+          goals_reason TEXT NOT NULL,
+          is_fallback INTEGER NOT NULL,
+          created_at INTEGER NOT NULL
+        );
+      ''');
+      await db.execute(
+        'CREATE INDEX idx_ai_role_suggestions_created ON ai_role_suggestions(created_at DESC);',
+      );
+      print('ai_role_suggestions table created');
     }
 
     print('Database upgrade complete');
@@ -186,6 +214,29 @@ class DatabaseService {
         'CREATE INDEX idx_budget_categories_budget ON budget_categories(budget_id);',
       );
       print('Performance indexes created');
+
+      await db.execute('''
+        CREATE TABLE ai_role_suggestions (
+          id TEXT PRIMARY KEY,
+          income_amount REAL NOT NULL,
+          currency_code TEXT NOT NULL DEFAULT 'USD',
+          period_start_ms INTEGER NOT NULL,
+          period_end_ms INTEGER NOT NULL,
+          account_id TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+          needs_amount REAL NOT NULL,
+          wants_amount REAL NOT NULL,
+          goals_amount REAL NOT NULL,
+          needs_reason TEXT NOT NULL,
+          wants_reason TEXT NOT NULL,
+          goals_reason TEXT NOT NULL,
+          is_fallback INTEGER NOT NULL,
+          created_at INTEGER NOT NULL
+        );
+      ''');
+      await db.execute(
+        'CREATE INDEX idx_ai_role_suggestions_created ON ai_role_suggestions(created_at DESC);',
+      );
+      print('ai_role_suggestions table created');
 
       print('Database initialized successfully!');
     } catch (e) {
@@ -891,6 +942,63 @@ class DatabaseService {
       return (result.first['total'] as num?)?.toDouble() ?? 0.0;
     } catch (e) {
       print('Error calculating total expenses: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== AI ROLE SUGGESTIONS ====================
+
+  /// Stores one suggestion snapshot (append-only; use [getLatestAiSuggestion] for UI).
+  Future<void> insertAiSuggestion({
+    required double incomeAmount,
+    required String currencyCode,
+    required int periodStartMs,
+    required int periodEndMs,
+    required AiRoleSuggestion suggestion,
+    String? accountId,
+  }) async {
+    try {
+      final db = await database;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert(
+        'ai_role_suggestions',
+        {
+          'id': const Uuid().v4(),
+          'income_amount': incomeAmount,
+          'currency_code': currencyCode,
+          'period_start_ms': periodStartMs,
+          'period_end_ms': periodEndMs,
+          'account_id': accountId,
+          'needs_amount': suggestion.needsAmount,
+          'wants_amount': suggestion.wantsAmount,
+          'goals_amount': suggestion.goalsAmount,
+          'needs_reason': suggestion.needsReason,
+          'wants_reason': suggestion.wantsReason,
+          'goals_reason': suggestion.goalsReason,
+          'is_fallback': suggestion.isFallback ? 1 : 0,
+          'created_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.abort,
+      );
+    } catch (e) {
+      print('Error inserting ai_role_suggestion: $e');
+      rethrow;
+    }
+  }
+
+  /// Most recent row by [created_at], or null if none.
+  Future<AiRoleSuggestionRecord?> getLatestAiSuggestion() async {
+    try {
+      final db = await database;
+      final rows = await db.query(
+        'ai_role_suggestions',
+        orderBy: 'created_at DESC',
+        limit: 1,
+      );
+      if (rows.isEmpty) return null;
+      return AiRoleSuggestionRecord.fromMap(rows.first);
+    } catch (e) {
+      print('Error reading ai_role_suggestion: $e');
       rethrow;
     }
   }

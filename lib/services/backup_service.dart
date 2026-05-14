@@ -272,6 +272,7 @@ class BackupService {
     final db = await _db.database;
 
     // Delete in reverse order of dependencies
+    await db.delete('ai_role_suggestions');
     await db.delete('transactions');
     await db.delete('budgets');
     await db.delete('accounts');
