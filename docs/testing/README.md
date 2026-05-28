@@ -54,7 +54,6 @@ All QA **documentation** lives under `docs/testing/`. **Code & automation** live
 ```
 docs/testing/
 ├── README.md                      ← you are here
-├── implementation-plan.md         ← detailed step-by-step guide
 ├── phase1-exploration/
 │   ├── app-flow-map.md            ← optional but recommended
 │   ├── test-case-suite.md         ← REQUIRED: ≥10 black-box cases
@@ -119,7 +118,7 @@ tool/stress/                       ← k6 or Dart load scripts
 
 ### Phase 2 — Engineer
 
-**Mindset:** Read implementation. Verify logic and integrations.
+**Mindset:** Verify logic and integrations.
 
 | Part | Location | Minimum |
 |------|----------|---------|
@@ -194,7 +193,7 @@ Outline: `docs/testing/presentation/slide-outline.md`
 
 1. Clone repo, checkout `test/test-main`
 2. `flutter pub get` && `flutter run` — explore the app once
-3. Read this README + skim [implementation-plan.md](./implementation-plan.md)
+3. Read this README
 4. Install: Flutter SDK, emulator, Postman, k6 (optional)
 
 ### Suggested work split
