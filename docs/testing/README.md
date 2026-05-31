@@ -232,10 +232,10 @@ Update checkboxes as the team completes work.
 ### Phase 1
 
 - [ ] App flow map (`phase1-exploration/app-flow-map.md`)
-- [ ] Test environment recorded at top of `test-case-suite.md`
-- [ ] ≥10 black-box test cases written **and executed**
-- [ ] ≥3 charter logs complete (target **5** for final report)
-- [ ] All failures logged as bug reports with evidence
+- [x] Test environment recorded at top of `test-case-suite.md`
+- [x] ≥10 black-box test cases written **and executed**
+- [x] ≥3 charter logs complete (target **5** for final report) — `charter-01` … `charter-05`
+- [x] All failures logged as bug reports with evidence — BUG-001
 
 ### Phase 2
 

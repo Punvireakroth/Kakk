@@ -15,6 +15,10 @@ class ExchangeRateService {
   // Cache: key = "FROM_TO", value = (rate, timestamp)
   final Map<String, _CachedRate> _cache = {};
 
+  /// Optional HTTP client override for unit tests.
+  @visibleForTesting
+  http.Client? testClient;
+
   /// Fetch exchange rate from one currency to another
   /// Returns the rate (1 unit of [from] = rate units of [to])
   Future<ExchangeRateResult> fetchExchangeRate(String from, String to) async {
@@ -39,7 +43,8 @@ class ExchangeRateService {
       final uri = Uri.parse('$_baseUrl/$fromUpper');
       debugPrint('Fetching exchange rate: $uri');
 
-      final response = await http
+      final client = testClient ?? http.Client();
+      final response = await client
           .get(uri)
           .timeout(
             const Duration(seconds: 10),

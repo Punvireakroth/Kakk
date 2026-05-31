@@ -201,6 +201,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        key: const Key('fab_add_transaction'),
         onPressed: () async {
           final result = await Navigator.push(
             context,
@@ -217,7 +218,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   Widget _buildMonthTabs() {
     return Container(
-      height: 50,
+      height: 48,
+      alignment: Alignment.center,
       color: Theme.of(context).scaffoldBackgroundColor,
       child: ListView.builder(
         controller: _monthScrollController,
@@ -239,7 +241,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.transparent : Colors.transparent,
                 border: isSelected

@@ -61,7 +61,7 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
     } else {
       final now = DateTime.now();
       _startDate = DateTime(now.year, now.month, 1);
-      _endDate = DateTime(now.year, now.month + 1, 0);
+      _endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
     }
 
     _loadAvailableCategories();
@@ -155,11 +155,11 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
       switch (period) {
         case 'this_month':
           _startDate = DateTime(now.year, now.month, 1);
-          _endDate = DateTime(now.year, now.month + 1, 0);
+          _endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
           break;
         case 'next_month':
           _startDate = DateTime(now.year, now.month + 1, 1);
-          _endDate = DateTime(now.year, now.month + 2, 0);
+          _endDate = DateTime(now.year, now.month + 2, 0, 23, 59, 59, 999);
           break;
         case 'this_week':
           _startDate = now.subtract(Duration(days: now.weekday - 1));
@@ -308,6 +308,7 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
             _buildSectionTitle('Budget Name'),
             const SizedBox(height: 8),
             TextFormField(
+              key: const Key('budget_name_field'),
               controller: _nameController,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
@@ -333,6 +334,7 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
             _buildSectionTitle('Budget Limit'),
             const SizedBox(height: 8),
             TextFormField(
+              key: const Key('budget_limit_field'),
               controller: _limitController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -472,6 +474,7 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
               width: double.infinity,
               height: 56,
               child: FilledButton(
+                key: const Key('budget_submit_button'),
                 onPressed: _isSubmitting ? null : _submitForm,
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF6B7FD7),

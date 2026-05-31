@@ -1,0 +1,267 @@
+{
+  "info": {
+    "_postman_id": "kakk-external-apis",
+    "name": "Kakk External APIs",
+    "description": "Validates external services Kakk depends on: Exchange Rate API (open.er-api.com) and Gemini (Google AI). Set `gemini_api_key` locally — never commit real secrets.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Exchange Rate API",
+      "item": [
+        {
+          "name": "Get latest USD rates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{exchange_base}}/USD"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('result is success', () => pm.expect(body.result).to.eql('success'));",
+                  "pm.test('KHR rate exists', () => pm.expect(body.rates.KHR).to.be.a('number'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get latest KHR rates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{exchange_base}}/KHR"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('base_code is KHR', () => pm.expect(body.base_code).to.eql('KHR'));",
+                  "pm.test('USD rate exists', () => pm.expect(body.rates.USD).to.be.a('number'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid currency code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{exchange_base}}/INVALID"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 or error body', () => {",
+                  "  const ok = pm.response.code === 404 || pm.response.json().result === 'error';",
+                  "  pm.expect(ok).to.be.true;",
+                  "});",
+                  "pm.test('Response is JSON object', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('json'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify USD to KHR rate is positive",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{exchange_base}}/USD"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const khr = pm.response.json().rates.KHR;",
+                  "pm.test('KHR rate > 0', () => pm.expect(khr).to.be.above(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get latest EUR rates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{exchange_base}}/EUR"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('base_code is EUR', () => pm.expect(body.base_code).to.eql('EUR'));",
+                  "pm.test('rates map is non-empty', () => pm.expect(Object.keys(body.rates).length).to.be.above(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get latest GBP rates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{exchange_base}}/GBP"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('result success', () => pm.expect(pm.response.json().result).to.eql('success'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gemini API",
+      "item": [
+        {
+          "name": "Generate content (valid key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contents\": [\n    {\n      \"parts\": [\n        { \"text\": \"Reply with exactly: OK\" }\n      ]\n    }\n  ]\n}"
+            },
+            "url": "{{gemini_base}}/models/gemini-2.0-flash:generateContent?key={{gemini_api_key}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 when key set', () => {",
+                  "  if (!pm.environment.get('gemini_api_key') || pm.environment.get('gemini_api_key') === '{{YOUR_KEY}}') {",
+                  "    pm.expect([401, 403, 400]).to.include(pm.response.code);",
+                  "  } else {",
+                  "    pm.response.to.have.status(200);",
+                  "  }",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('candidates present', () => pm.expect(pm.response.json().candidates).to.be.an('array'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate content (missing key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contents\": [{ \"parts\": [{ \"text\": \"Hello\" }] }]\n}"
+            },
+            "url": "{{gemini_base}}/models/gemini-2.0-flash:generateContent"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 or 403 without key', () => pm.expect([401, 403]).to.include(pm.response.code));",
+                  "pm.test('Error object in body', () => pm.expect(pm.response.json().error).to.be.an('object'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate content (invalid key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contents\": [{ \"parts\": [{ \"text\": \"Hello\" }] }]\n}"
+            },
+            "url": "{{gemini_base}}/models/gemini-2.0-flash:generateContent?key=INVALID_KEY_FOR_TEST"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400 or 403', () => pm.expect([400, 403]).to.include(pm.response.code));",
+                  "pm.test('Error message present', () => pm.expect(pm.response.json().error.message).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List models (valid key optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gemini_base}}/models?key={{gemini_api_key}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 or auth error', () => pm.expect([200, 401, 403]).to.include(pm.response.code));",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('models array present', () => pm.expect(pm.response.json().models).to.be.an('array'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -195,6 +195,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        key: const Key('fab_add_budget'),
         onPressed: _navigateToAddBudget,
         backgroundColor: accentColor,
         child: const Icon(Icons.add, size: 28),

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-import 'package:chashew/services/database_service.dart';
-import 'package:chashew/services/seeding_service.dart';
+import 'package:kakk/services/database_service.dart';
+import 'package:kakk/services/seeding_service.dart';
 
 /// Seeds expense-only transactions across the **same ~3 calendar months**
 /// [SpendingSummaryService] uses, so Gemini sees richer Needs/Wants/Goals averages.

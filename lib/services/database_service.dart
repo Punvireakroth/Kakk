@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -15,6 +16,28 @@ class DatabaseService {
   factory DatabaseService() => _instance;
 
   DatabaseService._internal();
+
+  /// Closes and clears the singleton so tests can open a fresh database.
+  @visibleForTesting
+  static Future<void> resetForTesting() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
+
+  /// Opens an in-memory database with the same schema (VM / integration tests).
+  @visibleForTesting
+  Future<void> openInMemoryForTesting() async {
+    await resetForTesting();
+    _database = await openDatabase(
+      inMemoryDatabasePath,
+      version: 5,
+      onCreate: _createDatabase,
+      onUpgrade: _onUpgrade,
+      onConfigure: _onConfigure,
+    );
+  }
 
   /// Get database instance
   Future<Database> get database async {

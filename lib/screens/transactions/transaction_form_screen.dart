@@ -343,6 +343,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen>
     final showConversion = _inputCurrency != _accountCurrency;
 
     return GestureDetector(
+      key: const Key('transaction_category_picker'),
       onTap: () => _showCategoryPicker(categories),
       child: Container(
         width: double.infinity,
